@@ -1,5 +1,7 @@
 package com.covid.warriors.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.covid.warriors.response.model.MessageInfo;
 import com.covid.warriors.service.CovidWarriorsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -33,5 +36,14 @@ public class MessageSenderController {
 		
 	    String response = covidWarriorsService.sendMessage(city, category);
 		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
+	}
+	
+	@RequestMapping("/getResponse")  
+	public ResponseEntity<?> getResponse(@RequestParam("city") String city, 
+			@RequestParam("category") String category) throws JsonProcessingException   
+	{  
+		
+		List<MessageInfo> messages = covidWarriorsService.getResponses(city, category);
+		return ResponseEntity.ok().body(messages);  
 	}
 }

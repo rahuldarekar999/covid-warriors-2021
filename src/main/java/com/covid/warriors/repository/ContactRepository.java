@@ -11,5 +11,7 @@ import com.covid.warriors.entity.model.ContactEntity;
 public interface ContactRepository extends JpaRepository<ContactEntity, Long> {
 
 	List<ContactEntity> findByCityAndCategory(String city, String category);
+	
+	List<String> findMobileNumberByCityAndCategory(String city, String category);
 
 }
