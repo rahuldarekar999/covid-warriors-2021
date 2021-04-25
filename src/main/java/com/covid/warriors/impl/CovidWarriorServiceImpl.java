@@ -1,6 +1,7 @@
 package com.covid.warriors.impl;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import com.covid.warriors.entity.model.ContactEntity;
 import com.covid.warriors.repository.CategoryMessageRepository;
 import com.covid.warriors.repository.ContactRepository;
 import com.covid.warriors.request.model.MessageRequest;
+import com.covid.warriors.response.model.SendMessageResponse;
 import com.covid.warriors.service.CovidWarriorsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -54,16 +56,39 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	    List<ContactEntity> contacts = contactRepo.findByCityAndCategory(city, category);
 	    if(!CollectionUtils.isEmpty(contacts)) {
 	    	contacts.parallelStream().forEach(contact ->{
-	    		MessageRequest request = new MessageRequest();
-	    		CategoryMessage message = categoryMessageRepo.findByCategory(contact.getCategory());
-	    		request.setBody(message.getMessage());
-	    		request.setPhone(Long.valueOf(contact.getMobileNumber()));
-	    		HttpEntity<MessageRequest> entity = new HttpEntity<MessageRequest>(request,headers);
-	    	    String url = apiUrl + instanceId + "/sendMessage?token=" + token;
-	    	    System.out.println("URL : " + url);
-	    	    String response = restTemplate.exchange(
-	    	    		url, HttpMethod.POST, entity, String.class).getBody();
-	    	    System.out.println("Response for : " + contact.getMobileNumber() + " : " + response);
+	    		long lastSentDiff = 0;
+	    		long lastReceivedDiff = 0;
+	    		if(contact.getLastMessageSentTime() != null) {
+	    			Date currDate = new Date();
+	    			long diff = currDate.getTime() - contact.getLastMessageSentTime().getTime();
+	    			lastSentDiff = diff / (60 * 60 * 1000) % 24;
+	    		}
+	    		if(contact.getLastMessageReceivedTime() != null) {
+	    			Date currDate = new Date();
+	    			long diff = currDate.getTime() - contact.getLastMessageReceivedTime().getTime();
+	    			lastReceivedDiff = diff / (60 * 60 * 1000) % 24;
+	    		}
+	    		if(lastSentDiff > 1 || lastReceivedDiff > 1){
+		    		MessageRequest request = new MessageRequest();
+		    		CategoryMessage message = categoryMessageRepo.findByCategory(contact.getCategory());
+		    		request.setBody(message.getMessage());
+		    		request.setPhone(Long.valueOf(contact.getMobileNumber()));
+		    		HttpEntity<MessageRequest> entity = new HttpEntity<MessageRequest>(request,headers);
+		    	    String url = apiUrl + instanceId + "/sendMessage?token=" + token;
+		    	    System.out.println("URL : " + url);
+		    	    String response = restTemplate.exchange(
+		    	    		url, HttpMethod.POST, entity, String.class).getBody();
+		    	    try {
+		    	    	SendMessageResponse responseObj = mapper.readValue(response, SendMessageResponse.class);
+		    	    	if(responseObj.isSent()) {
+		    	    		contact.setLastMessageSentTime(new Date());
+		    	    		contactRepo.saveAndFlush(contact);
+		    	    	}
+		    	    } catch(Exception ex){
+		    	    	System.out.println("Error while parsing response");
+		    		}
+		    	    System.out.println("Response for : " + contact.getMobileNumber() + " : " + response);
+	    		}
 	    	});
 	    	return "Message Successfully Sent";  
 	    }
