@@ -115,7 +115,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	    System.out.println("URL : " + url);
 	    String response = restTemplate.exchange(
 	    		url, HttpMethod.GET, null, String.class).getBody();
-	    System.out.println(response);
+	   // System.out.println(response);
 	    try {
 			GetMessagesResponse responseObj = mapper.readValue(response, GetMessagesResponse.class);
 			if(responseObj!=null) {

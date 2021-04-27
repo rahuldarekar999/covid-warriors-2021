@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,6 +29,7 @@ public class MessageSenderController {
 		return "Running...!";  
 	}  
 	
+	@CrossOrigin
 	@RequestMapping("/sendMessage")  
 	public ResponseEntity<?> sendMessage(@RequestParam("city") String city, 
 			@RequestParam("category") String category) throws JsonProcessingException   
@@ -38,6 +39,7 @@ public class MessageSenderController {
 		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
 	}
 	
+	@CrossOrigin
 	@RequestMapping("/getResponse")  
 	public ResponseEntity<?> getResponse(@RequestParam("city") String city, 
 			@RequestParam("category") String category) throws JsonProcessingException   

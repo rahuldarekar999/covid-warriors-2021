@@ -1,5 +1,7 @@
 package com.covid.warriors.response.model;
 
+import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -12,7 +14,8 @@ public class MessageInfo {
 	private String author;
 	private String chatId;
 	private boolean fromMe;
-
+	private long time;
+	
 	public String getId() {
 		return id;
 	}
@@ -59,6 +62,13 @@ public class MessageInfo {
 	}
 	public void setFromMe(boolean fromMe) {
 		this.fromMe = fromMe;
+	}
+	
+	public long getTime() {
+		return time;
+	}
+	public void setTime(long time) {
+		this.time = time;
 	}
 	@Override
 	public String toString() {

@@ -2,6 +2,8 @@ package com.covid.warriors.entity.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -9,8 +11,11 @@ import javax.persistence.Table;
 @Table(name = "CATEGORY_MESSAGE")
 public class CategoryMessage {
 
-	@Column(name = "category")
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private long id;
+	
+	@Column(name = "category")
 	private String category;
 	
 	@Column(name="message")
@@ -30,9 +35,15 @@ public class CategoryMessage {
 
 	public void setMessage(String message) {
 		this.message = message;
+	}	
+
+	public long getId() {
+		return id;
 	}
-	
-	
+
+	public void setId(long id) {
+		this.id = id;
+	}
 
 	@Override
 	public String toString() {
