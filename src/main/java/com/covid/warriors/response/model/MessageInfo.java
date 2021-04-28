@@ -5,7 +5,7 @@ import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MessageInfo {
+public class MessageInfo implements Comparable<MessageInfo> {
 	
 	private String id;
 	
@@ -75,6 +75,9 @@ public class MessageInfo {
 		return "GetMessageResponse [id=" + id + ", body=" + body + ", type=" + type + ", author="
 				+ author + ", chatId=" + chatId + "]";
 	}
-	
-	
+
+	@Override
+	public int compareTo(MessageInfo o) {
+		return (int) (o.time - time);
+	}
 }
