@@ -37,7 +37,10 @@ public class ContactEntity {
 	
 	@Column(name="last_message_received_time")
 	private Date lastMessageReceivedTime;
-
+	
+	@Column(name="whats_app_exist")
+	private boolean whatsAppExist;
+	
 	public String getMobileNumber() {
 		return mobileNumber;
 	}
@@ -100,6 +103,14 @@ public class ContactEntity {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public boolean isWhatsAppExist() {
+		return whatsAppExist;
+	}
+
+	public void setWhatsAppExist(boolean whatsAppExist) {
+		this.whatsAppExist = whatsAppExist;
 	}
 
 	@Override

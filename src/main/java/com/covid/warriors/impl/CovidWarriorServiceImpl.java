@@ -21,12 +21,15 @@ import com.covid.warriors.entity.model.ContactEntity;
 import com.covid.warriors.repository.CategoryMessageRepository;
 import com.covid.warriors.repository.ContactRepository;
 import com.covid.warriors.request.model.MessageRequest;
+import com.covid.warriors.response.model.CheckPhoneReponse;
 import com.covid.warriors.response.model.GetMessagesResponse;
 import com.covid.warriors.response.model.MessageInfo;
 import com.covid.warriors.response.model.SendMessageResponse;
 import com.covid.warriors.service.CovidWarriorsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.twilio.Twilio;
+import com.twilio.rest.lookups.v1.PhoneNumber;
 
 @Service
 public class CovidWarriorServiceImpl implements CovidWarriorsService {
@@ -82,21 +85,36 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		    		CategoryMessage message = categoryMessageRepo.findByCategory(contact.getCategory());
 		    		request.setBody(message.getMessage());
 		    		request.setPhone(Long.valueOf(contact.getMobileNumber()));
-		    		HttpEntity<MessageRequest> entity = new HttpEntity<MessageRequest>(request,headers);
-		    	    String url = apiUrl + instanceId + "/sendMessage?token=" + token;
-		    	    System.out.println("URL : " + url);
-		    	    String response = restTemplate.exchange(
-		    	    		url, HttpMethod.POST, entity, String.class).getBody();
-		    	    try {
-		    	    	SendMessageResponse responseObj = mapper.readValue(response, SendMessageResponse.class);
-		    	    	if(responseObj.isSent()) {
-		    	    		contact.setLastMessageSentTime(new Date());
-		    	    		contactRepo.saveAndFlush(contact);
-		    	    	}
-		    	    } catch(Exception ex){
+		    		try {
+						String url = apiUrl + instanceId + "/checkPhone?token" + token + "&phoneNumber="
+								+ request.getPhone();
+
+						String responseForCheckPhone = restTemplate.exchange(url, HttpMethod.GET, null, String.class)
+								.getBody();
+						CheckPhoneReponse responseObj = mapper.readValue(responseForCheckPhone,
+								CheckPhoneReponse.class);
+						if(responseObj != null && "exists".equalsIgnoreCase(responseObj.getResult())) {
+				    		HttpEntity<MessageRequest> entity = new HttpEntity<MessageRequest>(request,headers);
+				    	    url = apiUrl + instanceId + "/sendMessage?token=" + token;
+				    	    System.out.println("URL : " + url);
+				    	    String response = restTemplate.exchange(
+				    	    		url, HttpMethod.POST, entity, String.class).getBody();
+				    	    
+				    	    	SendMessageResponse responseObjMessage = mapper.readValue(response, SendMessageResponse.class);
+				    	    	if(responseObjMessage.isSent()) {
+				    	    		contact.setLastMessageSentTime(new Date());
+				    	    		contactRepo.saveAndFlush(contact);
+				    	    	}
+				    	    
+				    	    System.out.println("Response for : " + contact.getMobileNumber() + " : " + response);
+		    		
+			    		} else {
+			    			contact.setWhatsAppExist(false);
+			    			contactRepo.saveAndFlush(contact);
+			    		}
+		    		} catch(Exception ex){
 		    	    	System.out.println("Error while parsing response");
 		    		}
-		    	    System.out.println("Response for : " + contact.getMobileNumber() + " : " + response);
 	    		}
 	    	});
 	    	return "Message Successfully Sent";  
@@ -141,4 +159,20 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		return validResponses;
 	}
 	
+	public static void main(String[] args) {
+		Twilio.init("AC04e8e8d3a6b5eff922219c1fcde05f39", "b9caa7ec18e5388cd529b2621cff21ec");
+       /* Call call = Call.creator(
+                new com.twilio.type.PhoneNumber("+919923175711"),
+                new com.twilio.type.PhoneNumber("+917588037827"),
+                new com.twilio.type.Twiml("<Response><Say>Ahoy, World!</Say></Response>"))
+            .create();
+       
+        System.out.println(call.getSid() + " : " + call.getStatus() + " : " + call.getAnsweredBy() + " : ");*/
+        
+        PhoneNumber phoneNumber = PhoneNumber.fetcher(
+                new com.twilio.type.PhoneNumber("+917719508074"))
+            .setType(Arrays.asList("carrier")).fetch();
+
+        System.out.println(phoneNumber);
+    }
 }
