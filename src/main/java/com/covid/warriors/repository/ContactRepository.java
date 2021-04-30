@@ -14,4 +14,6 @@ public interface ContactRepository extends JpaRepository<ContactEntity, Long> {
 	
 	List<String> findMobileNumberByCityAndCategory(String city, String category);
 
+	ContactEntity findByMobileNumberAndCityAndCategory(String chatIdMobileNumber, String city, String category);
+
 }

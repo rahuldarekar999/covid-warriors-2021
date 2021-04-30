@@ -1,7 +1,5 @@
 package com.covid.warriors.response.model;
 
-import java.util.Date;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -15,6 +13,8 @@ public class MessageInfo implements Comparable<MessageInfo> {
 	private String chatId;
 	private boolean fromMe;
 	private long time;
+	
+	private boolean isValid=true;
 	
 	public String getId() {
 		return id;
@@ -49,7 +49,7 @@ public class MessageInfo implements Comparable<MessageInfo> {
 	
 	public String getChatIdMobileNumber() {
 		if(chatId!=null) {
-			System.out.println(chatId.substring(0, chatId.indexOf("@")));
+			//System.out.println(chatId.substring(0, chatId.indexOf("@")));
 			return chatId.substring(0, chatId.indexOf("@"));
 			
 		}
@@ -69,6 +69,13 @@ public class MessageInfo implements Comparable<MessageInfo> {
 	}
 	public void setTime(long time) {
 		this.time = time;
+	}
+	
+	public boolean isValid() {
+		return isValid;
+	}
+	public void setValid(boolean isValid) {
+		this.isValid = isValid;
 	}
 	@Override
 	public String toString() {

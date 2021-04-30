@@ -46,19 +46,6 @@ public class MessageSenderController {
 	{  
 		
 		List<MessageInfo> messages = covidWarriorsService.getResponses(city, category);
-		return ResponseEntity.ok().body(getMessageMap(messages));
-	}
-
-	private Map<String, Set<MessageInfo>> getMessageMap(List<MessageInfo> messageInfos) {
-		if(Objects.nonNull(messageInfos) && !messageInfos.isEmpty()) {
-			Map<String, Set<MessageInfo>> messageInfoMap = new HashMap<>();
-			for(MessageInfo messageInfo : messageInfos) {
-				Set<MessageInfo> messageInfoList = messageInfoMap.getOrDefault(messageInfo.getChatIdMobileNumber(), new TreeSet<>());
-				messageInfoList.add(messageInfo);
-				messageInfoMap.putIfAbsent(messageInfo.getChatIdMobileNumber(), messageInfoList);
-			}
-			return messageInfoMap;
-		}
-		return Collections.emptyMap();
+		return ResponseEntity.ok().body(covidWarriorsService.getPositiveMessages(messages));
 	}
 }

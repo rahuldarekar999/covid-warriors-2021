@@ -3,7 +3,7 @@ package com.covid.warriors.response.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CheckPhoneReponse {
+public class CheckPhoneResponse {
 
 		private String result;
 

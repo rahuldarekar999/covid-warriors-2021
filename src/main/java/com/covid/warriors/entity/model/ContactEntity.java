@@ -39,7 +39,10 @@ public class ContactEntity {
 	private Date lastMessageReceivedTime;
 	
 	@Column(name="whats_app_exist")
-	private boolean whatsAppExist;
+	private Boolean whatsAppExist;
+	
+	@Column(name="message_sent_count")
+	private Integer messageSentCount;
 	
 	public String getMobileNumber() {
 		return mobileNumber;
@@ -105,12 +108,24 @@ public class ContactEntity {
 		this.id = id;
 	}
 
-	public boolean isWhatsAppExist() {
+	public Boolean isWhatsAppExist() {
 		return whatsAppExist;
 	}
 
-	public void setWhatsAppExist(boolean whatsAppExist) {
+	public void setWhatsAppExist(Boolean whatsAppExist) {
 		this.whatsAppExist = whatsAppExist;
+	}
+
+	public Integer getMessageSentCount() {
+		return messageSentCount;
+	}
+
+	public void setMessageSentCount(Integer messageSentCount) {
+		this.messageSentCount = messageSentCount;
+	}
+
+	public Boolean getWhatsAppExist() {
+		return whatsAppExist;
 	}
 
 	@Override
