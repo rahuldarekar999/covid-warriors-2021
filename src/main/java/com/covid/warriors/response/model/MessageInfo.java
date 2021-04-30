@@ -49,7 +49,7 @@ public class MessageInfo implements Comparable<MessageInfo> {
 	
 	public String getChatIdMobileNumber() {
 		if(chatId!=null) {
-			//System.out.println(chatId.substring(0, chatId.indexOf("@")));
+		//	System.out.println(chatId.substring(0, chatId.indexOf("@")));
 			return chatId.substring(0, chatId.indexOf("@"));
 			
 		}

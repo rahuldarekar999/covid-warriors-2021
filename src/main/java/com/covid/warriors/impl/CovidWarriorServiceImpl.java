@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -140,25 +142,123 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		}
 		return "No Data for given City And Category";
 	}
+	
+	@Override
+	public String sendMessageCustom(String city, String category, String message, List<String> mobileList) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+		List<ContactEntity> contacts = contactRepo.findByCityAndCategory(city, category);
+		if (!CollectionUtils.isEmpty(mobileList)) {
+			mobileList.parallelStream().forEach(contact -> {
+				contact = contact.replaceAll("[()\\s-]+", "");
+				if(contact.contains("+")) {
+					contact = contact.replace("+", "");
+				}
+				Pattern p1 = Pattern.compile("(91)?[6-9][0-9]{9}");
+				Pattern p2 = Pattern.compile("(0)?[6-9][0-9]{9}");
+				Matcher m1 = p1.matcher(contact);
+				Matcher m2 = p2.matcher(contact);
+				boolean isPhoneWithNineOne = (m1.find() && m1.group().equals(contact));
+				boolean isPhoneWithZero = (m2.find() && m2.group().equals(contact));
+				if(contact.length() == 10) {
+					contact = "91" + contact;
+				} else if(isPhoneWithNineOne) {
+					contact = contact;
+				} else if(isPhoneWithZero) {
+					contact = contact.substring(1, contact.length());
+				}
+				if(contact.length()==10) {
+					contact = "91" + contact;
+				}
+				boolean resend = true;
+				if(contact.length() == 12) {
+					ContactEntity contactEntity = contactRepo.findByMobileNumberAndCityAndCategory(contact, city, category);
+					if(contactEntity == null) {
+						contactEntity = new ContactEntity();
+						contactEntity.setMobileNumber(contact);
+						contactEntity.setCity(city.toUpperCase());
+						contactEntity.setCategory(category.toUpperCase());
+					}
+					if (contactEntity.getLastMessageSentTime() != null) {
+						Date currDate = new Date();
+						long diff = currDate.getTime() - contactEntity.getLastMessageSentTime().getTime();
+						long lastSentDiff = diff / (60 * 1000);
+						if (lastSentDiff < resendWaitMin)
+							resend = false;
+					}
+					if (contactEntity.getLastMessageReceivedTime() != null) {
+						Date currDate = new Date();
+						long diff = currDate.getTime() - contactEntity.getLastMessageReceivedTime().getTime();
+						long lastReceivedDiff = diff / (60 * 1000);
+						if (lastReceivedDiff < resendWaitMin)
+							resend = false;
+					} else if (contactEntity.getLastMessageReceivedTime() == null && contactEntity.getMessageSentCount() != null
+							&& contactEntity.getMessageSentCount() >= stopMessageSentCount) {
+						resend = false;
+					}
+					if (resend) {
+						MessageRequest request = new MessageRequest();
+						request.setBody(message);
+						request.setPhone(Long.valueOf(contact));
+						try {
+							String url = apiUrl + instanceId + "/checkPhone?token=" + token + "&phone="
+									+ request.getPhone();
+	
+							String responseForCheckPhone = restTemplate.exchange(url, HttpMethod.GET, null, String.class)
+									.getBody();
+							CheckPhoneResponse responseObj = mapper.readValue(responseForCheckPhone,
+									CheckPhoneResponse.class);
+							if (responseObj != null && "exists".equalsIgnoreCase(responseObj.getResult())) {
+								HttpEntity<MessageRequest> entity = new HttpEntity<MessageRequest>(request, headers);
+								url = apiUrl + instanceId + "/sendMessage?token=" + token;
+								System.out.println("URL : " + url);
+								String response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class)
+										.getBody();
+	
+								SendMessageResponse responseObjMessage = mapper.readValue(response,
+										SendMessageResponse.class);
+								System.out.println("Response for : " + contact + " : " + response);
+	
+						    } else {
+						    	contactEntity.setWhatsAppExist(false);
+							}
+						} catch (Exception ex) {
+							System.out.println("Error while parsing response : " + ex);
+						}
+					}
+					contactRepo.saveAndFlush(contactEntity);
+				}
+			});
+			return "Message Successfully Sent";
+		}
+		return "No Data for given City And Category";
+	}
 
 	@Override
 	public List<MessageInfo> getResponses(String city, String category) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		List<MessageInfo> messages = new ArrayList<MessageInfo>();
-
-		String url = apiUrl + instanceId + "/messagesHistory?token=" + token;
-		System.out.println("URL : " + url);
-		String response = restTemplate.exchange(url, HttpMethod.GET, null, String.class).getBody();
-		// System.out.println(response);
-		try {
-			GetMessagesResponse responseObj = mapper.readValue(response, GetMessagesResponse.class);
-			if (responseObj != null) {
-				messages = getValidResponses(city, category, responseObj.getMessages());
+		boolean isContinue = true;
+		int pageCount = 0;
+		do {
+			String url = apiUrl + instanceId + "/messagesHistory?token=" + token + "&page=" + pageCount;
+			System.out.println("URL : " + url);
+			String response = restTemplate.exchange(url, HttpMethod.GET, null, String.class).getBody();
+			// System.out.println(response);
+			try {
+				GetMessagesResponse responseObj = mapper.readValue(response, GetMessagesResponse.class);
+				if (responseObj != null && !responseObj.getMessages().isEmpty()) {
+					pageCount++;
+					messages = getValidResponses(city, category, responseObj.getMessages());
+				} else {
+					isContinue = false;
+					break;
+				}
+			} catch (JsonProcessingException ex) {
+				System.out.println("Error while parsing response : " + ex);
 			}
-		} catch (JsonProcessingException ex) {
-			System.out.println("Error while parsing response : " + ex);
-		}
+		} while(isContinue);
 		return messages;
 	}
 
@@ -221,7 +321,28 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				"This is test response who are you? I dont know you.,why are you spamming me../stop sending messaged"
 						.toLowerCase(),
 				"who are you");
-		System.out.println(result);
+		System.out.println("9822976424".startsWith("91"));
+		
+		String contact = "7588037827";
+		contact = contact.replaceAll("[()\\s-]+", "");
+		contact = contact.replace("+", "");
+		Pattern p1 = Pattern.compile("(91)?[6-9][0-9]{9}");
+		Pattern p2 = Pattern.compile("(0)?[6-9][0-9]{9}");
+		Matcher m1 = p1.matcher(contact);
+		Matcher m2 = p2.matcher(contact);
+		boolean isPhoneWithNineOne = (m1.find() && m1.group().equals(contact));
+		boolean isPhoneWithZero = (m2.find() && m2.group().equals(contact));
+		if(contact.length() == 10) {
+			contact = "91" + contact;
+		} else if(isPhoneWithNineOne) {
+			contact = contact;
+		} else if(isPhoneWithZero) {
+			contact = contact.substring(1, contact.length());
+		}
+		if(contact.length()==10) {
+			contact = "91" + contact;
+		}
+		System.out.println(contact);
 	}
 
 	@Override

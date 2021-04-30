@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class GetMessagesResponse {
 	private List<MessageInfo> messages;
 	
+	private int page;
+	
 	private int lastMessageNumber;
 
 	public List<MessageInfo> getMessages() {
@@ -24,6 +26,14 @@ public class GetMessagesResponse {
 
 	public void setLastMessageNumber(int lastMessageNumber) {
 		this.lastMessageNumber = lastMessageNumber;
+	}
+	
+	public int getPage() {
+		return page;
+	}
+
+	public void setPage(int page) {
+		this.page = page;
 	}
 
 	@Override
