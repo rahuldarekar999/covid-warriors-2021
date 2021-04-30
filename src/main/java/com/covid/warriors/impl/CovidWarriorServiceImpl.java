@@ -218,6 +218,15 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 								SendMessageResponse responseObjMessage = mapper.readValue(response,
 										SendMessageResponse.class);
 								System.out.println("Response for : " + contact + " : " + response);
+								
+								if (responseObjMessage.isSent()) {
+									contactEntity.setLastMessageSentTime(new Date());
+									contactEntity.setMessageSentCount(
+											contactEntity.getMessageSentCount() != null ? contactEntity.getMessageSentCount() + 1 : 0);
+								//	contactRepo.saveAndFlush(contactEntity);
+								}
+
+
 	
 						    } else {
 						    	contactEntity.setWhatsAppExist(false);
