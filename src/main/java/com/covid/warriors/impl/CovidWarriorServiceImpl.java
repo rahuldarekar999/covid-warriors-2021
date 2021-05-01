@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -16,9 +16,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.covid.warriors.request.model.CustomMessage;
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +33,7 @@ import com.covid.warriors.entity.model.SentMessageMetadataEntity;
 import com.covid.warriors.repository.CategoryMessageRepository;
 import com.covid.warriors.repository.ContactRepository;
 import com.covid.warriors.repository.SentMessageMetadataRepository;
+import com.covid.warriors.request.model.CustomMessage;
 import com.covid.warriors.request.model.MessageRequest;
 import com.covid.warriors.response.model.CheckPhoneResponse;
 import com.covid.warriors.response.model.GetMessagesResponse;
@@ -44,6 +42,8 @@ import com.covid.warriors.response.model.SendMessageResponse;
 import com.covid.warriors.service.CovidWarriorsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 import com.twilio.Twilio;
 
 @Service
@@ -317,7 +317,8 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 
 	private List<MessageInfo> getValidResponses(String city, String category, List<MessageInfo> messages) {
 		System.out.println("Filtering valid messages -> " + messages.size());
-		
+		messages.sort((MessageInfo m11, MessageInfo m12)->Long.compare(m12.getTime(), m11.getTime())); 
+	
 		List<ContactEntity> contacts = contactRepo.findByCityAndCategory(city, category);
 		List<String> validNumbers = contacts.stream().map(ContactEntity::getMobileNumber).collect(Collectors.toList());
 
@@ -433,7 +434,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Override
 	public Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messageInfos) {
 		if (Objects.nonNull(messageInfos) && !messageInfos.isEmpty()) {
-			Map<String, List<MessageInfo>> messageInfoMap = new HashMap<>();
+			Map<String, List<MessageInfo>> messageInfoMap = new LinkedHashMap<>();
 			for (MessageInfo messageInfo : messageInfos) {
 				if (StringUtils.isNotBlank(messageInfo.getBody())) {
 					//	System.out.println("msg -> " + messageInfo.getBody());
@@ -456,11 +457,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					//}
 				}
 			}
-			for (Map.Entry<String,List<MessageInfo>> entry : messageInfoMap.entrySet()) {
-				if(!CollectionUtils.isEmpty(entry.getValue())) {
-					entry.getValue().sort((MessageInfo m11, MessageInfo m12)->Long.compare(m12.getTime(), m11.getTime())); 
-				}
-			}
+			
 			return messageInfoMap;
 		}
 		return Collections.emptyMap();
