@@ -16,6 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.covid.warriors.request.model.CustomMessage;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
 import org.apache.commons.lang3.StringUtils;
@@ -157,12 +158,12 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	}
 	
 	@Override
-	public String sendMessageCustom(String city, String category, String message, List<String> mobileList, String from) {
+	public String sendMessageCustom(CustomMessage customMessage) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-		if (!CollectionUtils.isEmpty(mobileList)) {
+		if (!CollectionUtils.isEmpty(customMessage.getMobileList())) {
 			List<String> validNumberList = new ArrayList<>();
-			mobileList.parallelStream().forEach(contact -> {
+			customMessage.getMobileList().forEach(contact -> {
 				contact = contact.replaceAll("[()\\s-]+", "");
 				if(contact.contains("+")) {
 					contact = contact.replace("+", "");
@@ -185,12 +186,12 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				}
 				boolean resend = true;
 				if(contact.length() == 12) {
-					ContactEntity contactEntity = contactRepo.findByMobileNumberAndCityAndCategory(contact, city, category);
+					ContactEntity contactEntity = contactRepo.findByMobileNumberAndCityAndCategory(contact, customMessage.getCity(), customMessage.getCategory());
 					if(contactEntity == null) {
 						contactEntity = new ContactEntity();
 						contactEntity.setMobileNumber(contact);
-						contactEntity.setCity(city.toUpperCase());
-						contactEntity.setCategory(category.toUpperCase());
+						contactEntity.setCity(customMessage.getCity().toUpperCase());
+						contactEntity.setCategory(customMessage.getCategory().toUpperCase());
 					}
 					if (contactEntity.getLastMessageSentTime() != null) {
 						Date currDate = new Date();
@@ -211,7 +212,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					}
 					if (resend) {
 						MessageRequest request = new MessageRequest();
-						request.setBody(message);
+						request.setBody(customMessage.getMessage());
 						request.setPhone(Long.valueOf(contact));
 						try {
 							String url = apiUrl + instanceId + "/checkPhone?token=" + token + "&phone="
@@ -249,7 +250,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					contactRepo.saveAndFlush(contactEntity);
 				}
 			});
-			saveDataForSentMessages(from, validNumberList, category);
+			saveDataForSentMessages(customMessage.getFrom(), validNumberList, customMessage.getCategory());
 			return "Message Successfully Sent";
 		}
 		return "No Data for given City And Category";

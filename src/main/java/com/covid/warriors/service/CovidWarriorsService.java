@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.covid.warriors.request.model.CustomMessage;
 import com.covid.warriors.response.model.MessageInfo;
 
 public interface CovidWarriorsService {
@@ -14,7 +15,7 @@ public interface CovidWarriorsService {
 
 	Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messages);
 
-	String sendMessageCustom(String city, String category, String message, List<String> mobileList, String from);
+	String sendMessageCustom(CustomMessage customMessage);
 
 	List<String> getCityList();
 
