@@ -20,4 +20,6 @@ public interface CovidWarriorsService {
 
 	List<String> getCategoryList();
 
+	long getMinTime();
+
 }

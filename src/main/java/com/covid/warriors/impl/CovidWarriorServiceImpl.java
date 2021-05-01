@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -258,14 +256,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 			//String url = apiUrl + instanceId + "/messagesHistory?token=" + token + "&page=" + pageCount;
 			long maxTime = (Double.valueOf((Math.floor(new Date().getTime() / 1000)))).longValue();
 			
-			Calendar cal = Calendar.getInstance();
-			cal.add(Calendar.DATE, -daysBefore);
-			cal.set(Calendar.HOUR_OF_DAY, 0);
-			cal.set(Calendar.MINUTE, 0);
-			cal.set(Calendar.SECOND, 0);
-			cal.set(Calendar.MILLISECOND, 0);
-			long minTime = (Double.valueOf(Math.floor(cal.getTimeInMillis()/ 1000))).longValue();
-			
+			long minTime = getMinTime();
 			String url = apiUrl + instanceId + "/messages?limit=0&token=" + token + "&min_time=" + minTime + "&max_time=" + maxTime;
 			System.out.println("URL : " + url);
 			String response = restTemplate.exchange(url, HttpMethod.GET, null, String.class).getBody();
@@ -284,6 +275,19 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 			}
 	//	} while(isContinue);
 		return messages;
+	}
+
+	@Override
+	public long getMinTime() {
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.DATE, -daysBefore);
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		long minTime = (Double.valueOf(Math.floor(cal.getTimeInMillis()/ 1000))).longValue();
+		
+		return minTime;
 	}
 
 	private List<MessageInfo> getValidResponses(String city, String category, List<MessageInfo> messages) {
