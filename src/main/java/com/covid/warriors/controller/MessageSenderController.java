@@ -4,14 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.covid.warriors.request.model.CustomMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.covid.warriors.response.model.MessageInfo;
 import com.covid.warriors.service.CovidWarriorsService;
@@ -41,13 +39,11 @@ public class MessageSenderController {
 		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
 	}
 	
-	@RequestMapping("/sendMessageCustom")  
-	public ResponseEntity<?> sendMessageCustom(@RequestParam("city") String city, 
-			@RequestParam("category") String category, @RequestParam("message") String message,
-			@RequestParam("mobileList") List<String> mobileList, @RequestParam(name = "from", required = false) String from) throws JsonProcessingException   
+	@RequestMapping(value = "/sendMessageCustom", method = RequestMethod.POST)
+	public ResponseEntity<?> sendMessageCustom(@RequestBody CustomMessage customMessage) throws JsonProcessingException
 	{  
 		
-	    String response = covidWarriorsService.sendMessageCustom(city, category, message, mobileList, from);
+	    String response = covidWarriorsService.sendMessageCustom(customMessage);
 		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
 	}
 	
