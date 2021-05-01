@@ -1,5 +1,8 @@
 package com.covid.warriors.impl;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -13,6 +16,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -470,5 +475,58 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	public List<String> getCategoryList() {
 		List<String> categoryList = categoryMessageRepo.findAllDistinctCategory();
 		return categoryList;
+	}
+
+	public String uploadContactData(String path) {
+		List<ContactEntity> contactEntities = new ArrayList<>();
+		try (CSVReader reader = new CSVReader(new FileReader(path))) {
+			List<String[]> rows = reader.readAll();
+			rows.forEach(row -> {
+				if(StringUtils.isNotBlank(row[1])) {
+					String contact = row[1].replaceAll("[()\\s-]+", "");
+					contact = contact.replace("+", "");
+					Pattern p1 = Pattern.compile("(91)?[6-9][0-9]{9}");
+					Pattern p2 = Pattern.compile("(0)?[6-9][0-9]{9}");
+					Matcher m1 = p1.matcher(contact);
+					Matcher m2 = p2.matcher(contact);
+					boolean isPhoneWithNineOne = (m1.find() && m1.group().equals(contact));
+					boolean isPhoneWithZero = (m2.find() && m2.group().equals(contact));
+					if(contact.length() == 10) {
+						contact = "91" + contact;
+					} else if(isPhoneWithNineOne) {
+						contact = contact;
+					} else if(isPhoneWithZero) {
+						contact = contact.substring(1, contact.length());
+					}
+					if(contact.length()==10) {
+						contact = "91" + contact;
+					}
+					if(contact.length() == 12) {
+						ContactEntity contactEntity = new ContactEntity();
+						contactEntity.setMobileNumber(contact);
+						contactEntity.setCategory(StringUtils.isEmpty(row[0]) ? "" : row[0].toUpperCase());
+						contactEntity.setPinCode(row[2]);
+						contactEntity.setCity(StringUtils.isEmpty(row[3]) ? "" : row[3].toUpperCase());
+						contactEntity.setState(StringUtils.isEmpty(row[4]) ? "" : row[4].toUpperCase());
+						contactEntities.add(contactEntity);
+						if(contactEntities.size() == 1000) {
+							contactRepo.saveAll(contactEntities);
+							contactEntities.clear();
+						}
+					}
+
+				}
+			});
+			if(contactEntities.size() > 0)
+				contactRepo.saveAll(contactEntities);
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (CsvException e) {
+			e.printStackTrace();
+		}
+		return "OK";
 	}
 }
