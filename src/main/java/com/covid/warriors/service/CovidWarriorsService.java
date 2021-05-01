@@ -14,7 +14,7 @@ public interface CovidWarriorsService {
 
 	Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messages);
 
-	String sendMessageCustom(String city, String category, String message, List<String> mobileList);
+	String sendMessageCustom(String city, String category, String message, List<String> mobileList, String from);
 
 	List<String> getCityList();
 

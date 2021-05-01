@@ -44,10 +44,10 @@ public class MessageSenderController {
 	@RequestMapping("/sendMessageCustom")  
 	public ResponseEntity<?> sendMessageCustom(@RequestParam("city") String city, 
 			@RequestParam("category") String category, @RequestParam("message") String message,
-			@RequestParam("mobileList") List<String> mobileList) throws JsonProcessingException   
+			@RequestParam("mobileList") List<String> mobileList, @RequestParam(name = "from", required = false) String from) throws JsonProcessingException   
 	{  
 		
-	    String response = covidWarriorsService.sendMessageCustom(city, category, message, mobileList);
+	    String response = covidWarriorsService.sendMessageCustom(city, category, message, mobileList, from);
 		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
 	}
 	

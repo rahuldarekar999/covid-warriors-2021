@@ -26,8 +26,10 @@ import org.springframework.web.client.RestTemplate;
 
 import com.covid.warriors.entity.model.CategoryMessage;
 import com.covid.warriors.entity.model.ContactEntity;
+import com.covid.warriors.entity.model.SentMessageMetadataEntity;
 import com.covid.warriors.repository.CategoryMessageRepository;
 import com.covid.warriors.repository.ContactRepository;
+import com.covid.warriors.repository.SentMessageMetadataRepository;
 import com.covid.warriors.request.model.MessageRequest;
 import com.covid.warriors.response.model.CheckPhoneResponse;
 import com.covid.warriors.response.model.GetMessagesResponse;
@@ -75,6 +77,10 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Autowired
 	private CategoryMessageRepository categoryMessageRepo;
 
+	
+	@Autowired
+	private SentMessageMetadataRepository sentMetadataMessageRepo;
+	
 	@Override
 	public String sendMessage(String city, String category) {
 		HttpHeaders headers = new HttpHeaders();
@@ -146,11 +152,11 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	}
 	
 	@Override
-	public String sendMessageCustom(String city, String category, String message, List<String> mobileList) {
+	public String sendMessageCustom(String city, String category, String message, List<String> mobileList, String from) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-		List<ContactEntity> contacts = contactRepo.findByCityAndCategory(city, category);
 		if (!CollectionUtils.isEmpty(mobileList)) {
+			List<String> validNumberList = new ArrayList<>();
 			mobileList.parallelStream().forEach(contact -> {
 				contact = contact.replaceAll("[()\\s-]+", "");
 				if(contact.contains("+")) {
@@ -225,11 +231,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 									contactEntity.setLastMessageSentTime(new Date());
 									contactEntity.setMessageSentCount(
 											contactEntity.getMessageSentCount() != null ? contactEntity.getMessageSentCount() + 1 : 0);
+									validNumberList.add(contact);
 								//	contactRepo.saveAndFlush(contactEntity);
 								}
-
-
-	
 						    } else {
 						    	contactEntity.setWhatsAppExist(false);
 							}
@@ -240,9 +244,24 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					contactRepo.saveAndFlush(contactEntity);
 				}
 			});
+			saveDataForSentMessages(from, validNumberList, category);
 			return "Message Successfully Sent";
 		}
 		return "No Data for given City And Category";
+	}
+
+	private void saveDataForSentMessages(String from, List<String> validNumberList, String category) {
+		try {
+			SentMessageMetadataEntity entity = new SentMessageMetadataEntity();
+			String to = String.join(",", validNumberList);
+			entity.setFrom(from);
+			entity.setCategory(category);
+			entity.setSentOn(new Date());	
+			entity.setTo(to);
+			sentMetadataMessageRepo.saveAndFlush(entity);
+		} catch(Exception ex) {
+			System.out.println("Exception while saving data " + ex);	
+		}
 	}
 
 	@Override
@@ -397,6 +416,12 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		System.out.println("before -> " + list);
 		list.sort((MessageInfo m11, MessageInfo m12)->Long.compare(m12.getTime(), m11.getTime())); 
 		System.out.println("after -> " + list);
+		
+		List<String> numList = new ArrayList<>();
+		numList.add("12345");
+		numList.add("23423");
+		String numListStr = String.join(",", numList);
+		System.out.println(numListStr);
 	}
 
 	@Override
@@ -416,12 +441,12 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 							}
 					//		System.out.println("map -> " + messageInfo.isValid());
 						});
-						if(messageInfo.isValid()) {
+					//	if(messageInfo.isValid()) {
 							List<MessageInfo> messageInfoList = messageInfoMap
 									.getOrDefault(messageInfo.getChatIdMobileNumber(), new ArrayList<>());
 							messageInfoList.add(messageInfo);
 							messageInfoMap.putIfAbsent(messageInfo.getChatIdMobileNumber(), messageInfoList);
-						}
+					//	}
 					//}
 				}
 			}
