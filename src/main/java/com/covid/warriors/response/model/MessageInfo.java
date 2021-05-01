@@ -79,8 +79,8 @@ public class MessageInfo implements Comparable<MessageInfo> {
 	}
 	@Override
 	public String toString() {
-		return "GetMessageResponse [id=" + id + ", body=" + body + ", type=" + type + ", author="
-				+ author + ", chatId=" + chatId + "]";
+		return "MessageInfo [id=" + id + ", body=" + body + ", type=" + type + ", author=" + author + ", chatId="
+				+ chatId + ", fromMe=" + fromMe + ", time=" + time + ", isValid=" + isValid + "]";
 	}
 
 	@Override

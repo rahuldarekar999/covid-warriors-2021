@@ -2,6 +2,7 @@ package com.covid.warriors.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -56,6 +57,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 
 	@Value("${stop.message.sent.count}")
 	private int stopMessageSentCount;
+	
+	@Value("${days.before}")
+	private int daysBefore;
 
 //	@Value("#{'${valid.response.black.list}'.split(',')}")
 	@Value("#{'${valid.response.black.list}'.split(',')}")
@@ -249,30 +253,42 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		List<MessageInfo> messages = new ArrayList<MessageInfo>();
 		boolean isContinue = true;
-		int pageCount = 0;
-		do {
-			String url = apiUrl + instanceId + "/messagesHistory?token=" + token + "&page=" + pageCount;
+	//	int pageCount = 0;
+	//	do {
+			//String url = apiUrl + instanceId + "/messagesHistory?token=" + token + "&page=" + pageCount;
+			long maxTime = (Double.valueOf((Math.floor(new Date().getTime() / 1000)))).longValue();
+			
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.DATE, -daysBefore);
+			cal.set(Calendar.HOUR_OF_DAY, 0);
+			cal.set(Calendar.MINUTE, 0);
+			cal.set(Calendar.SECOND, 0);
+			cal.set(Calendar.MILLISECOND, 0);
+			long minTime = (Double.valueOf(Math.floor(cal.getTimeInMillis()/ 1000))).longValue();
+			
+			String url = apiUrl + instanceId + "/messages?limit=0&token=" + token + "&min_time=" + minTime + "&max_time=" + maxTime;
 			System.out.println("URL : " + url);
 			String response = restTemplate.exchange(url, HttpMethod.GET, null, String.class).getBody();
 			// System.out.println(response);
 			try {
 				GetMessagesResponse responseObj = mapper.readValue(response, GetMessagesResponse.class);
 				if (responseObj != null && !responseObj.getMessages().isEmpty()) {
-					pageCount++;
-					messages = getValidResponses(city, category, responseObj.getMessages());
-				} else {
+				//	pageCount++;
+					messages.addAll(getValidResponses(city, category, responseObj.getMessages()));
+				} /*else {
 					isContinue = false;
 					break;
-				}
+				}*/
 			} catch (JsonProcessingException ex) {
 				System.out.println("Error while parsing response : " + ex);
 			}
-		} while(isContinue);
+	//	} while(isContinue);
 		return messages;
 	}
 
 	private List<MessageInfo> getValidResponses(String city, String category, List<MessageInfo> messages) {
-		System.out.println("Filtering valid messages" + messages.size());
+		System.out.println("Filtering valid messages -> " + messages.size());
+		
 		List<ContactEntity> contacts = contactRepo.findByCityAndCategory(city, category);
 		List<String> validNumbers = contacts.stream().map(ContactEntity::getMobileNumber).collect(Collectors.toList());
 
@@ -288,11 +304,12 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					Date responseTime = new Date(response.getTime());
 					Date currTime = new Date();
 					boolean update = false;
-					if (currTime.before(responseTime)) {
+					if (contact.getLastMessageReceivedTime() == null ||
+							contact.getLastMessageReceivedTime().before(responseTime)) {
 						contact.setLastMessageReceivedTime(new Date(response.getTime()));
 						update = true;
 					}
-					if (contact.getMessageSentCount() > 0) {
+					if (contact.getMessageSentCount() == null || contact.getMessageSentCount() > 0) {
 						contact.setMessageSentCount(0);
 						update = true;
 					}
@@ -300,7 +317,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						contactRepo.saveAndFlush(contact);
 					}
 				} catch (Exception ex) {
-					System.out.println("Error while storing response time : " + ex);
+					System.out.println("Error while storing response time : " + ex.toString());
 				}
 			});
 		}
@@ -352,12 +369,36 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 			contact = "91" + contact;
 		}
 		System.out.println(contact);
+		
+		long currTime = (Double.valueOf((Math.floor(new Date().getTime() / 1000)))).longValue();
+		System.out.println(currTime);
+		
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.DATE, -3);
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		long prevTime = (Double.valueOf(Math.floor(cal.getTimeInMillis()/ 1000))).longValue();
+		System.out.println(prevTime);
+		
+		MessageInfo mObj1 = new MessageInfo();
+		mObj1.setTime(currTime);
+		MessageInfo mObj2 = new MessageInfo();
+		mObj2.setTime(prevTime);
+		
+		List<MessageInfo> list = new ArrayList<MessageInfo>();
+		list.add(mObj2);
+		list.add(mObj1);
+		System.out.println("before -> " + list);
+		list.sort((MessageInfo m11, MessageInfo m12)->Long.compare(m12.getTime(), m11.getTime())); 
+		System.out.println("after -> " + list);
 	}
 
 	@Override
-	public Map<String, Set<MessageInfo>> getPositiveMessages(List<MessageInfo> messageInfos) {
+	public Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messageInfos) {
 		if (Objects.nonNull(messageInfos) && !messageInfos.isEmpty()) {
-			Map<String, Set<MessageInfo>> messageInfoMap = new HashMap<>();
+			Map<String, List<MessageInfo>> messageInfoMap = new HashMap<>();
 			for (MessageInfo messageInfo : messageInfos) {
 				if (StringUtils.isNotBlank(messageInfo.getBody())) {
 					//	System.out.println("msg -> " + messageInfo.getBody());
@@ -372,16 +413,33 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					//		System.out.println("map -> " + messageInfo.isValid());
 						});
 						if(messageInfo.isValid()) {
-							Set<MessageInfo> messageInfoList = messageInfoMap
-									.getOrDefault(messageInfo.getChatIdMobileNumber(), new TreeSet<>());
+							List<MessageInfo> messageInfoList = messageInfoMap
+									.getOrDefault(messageInfo.getChatIdMobileNumber(), new ArrayList<>());
 							messageInfoList.add(messageInfo);
 							messageInfoMap.putIfAbsent(messageInfo.getChatIdMobileNumber(), messageInfoList);
 						}
 					//}
 				}
 			}
+			for (Map.Entry<String,List<MessageInfo>> entry : messageInfoMap.entrySet()) {
+				if(!CollectionUtils.isEmpty(entry.getValue())) {
+					entry.getValue().sort((MessageInfo m11, MessageInfo m12)->Long.compare(m12.getTime(), m11.getTime())); 
+				}
+			}
 			return messageInfoMap;
 		}
 		return Collections.emptyMap();
+	}
+
+	@Override
+	public List<String> getCityList() {
+		List<String> cityList = contactRepo.findAllDistinctCity();
+		return cityList;
+	}
+
+	@Override
+	public List<String> getCategoryList() {
+		List<String> categoryList = categoryMessageRepo.findAllDistinctCategory();
+		return categoryList;
 	}
 }

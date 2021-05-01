@@ -1,6 +1,8 @@
 package com.covid.warriors.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -58,5 +60,26 @@ public class MessageSenderController {
 		
 		List<MessageInfo> messages = covidWarriorsService.getResponses(city, category);
 		return ResponseEntity.ok().body(covidWarriorsService.getPositiveMessages(messages));
+	}
+	
+	@CrossOrigin
+	@RequestMapping("/getCity")  
+	public ResponseEntity<?> getCityList() throws JsonProcessingException   
+	{  
+		
+		List<String> cityList = covidWarriorsService.getCityList();
+		Map<String, List<String>> responseMap = new HashMap<>();
+		responseMap.put("data", cityList);
+		return ResponseEntity.ok().body(responseMap);
+	}
+	
+	@CrossOrigin
+	@RequestMapping("/getCategory")  
+	public ResponseEntity<?> getCategoryList() throws JsonProcessingException   
+	{  	
+		List<String> categoryList = covidWarriorsService.getCategoryList();
+		Map<String, List<String>> responseMap = new HashMap<>();
+		responseMap.put("data", categoryList);
+		return ResponseEntity.ok().body(responseMap);
 	}
 }
