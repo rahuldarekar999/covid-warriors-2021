@@ -91,7 +91,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	public String sendMessage(String city, String category) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-		List<ContactEntity> contacts = contactRepo.findByCityAndCategory(city, category);
+		List<ContactEntity> contacts = contactRepo.findByCityAndCategoryAndValid(city, category, true);
 		if (!CollectionUtils.isEmpty(contacts)) {
 			contacts.parallelStream().forEach(contact -> {
 				boolean resend = true;
@@ -185,6 +185,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					contact = "91" + contact;
 				}
 				boolean resend = true;
+				boolean isNew = false;
 				if(contact.length() == 12) {
 					ContactEntity contactEntity = contactRepo.findByMobileNumberAndCityAndCategory(contact, customMessage.getCity(), customMessage.getCategory());
 					if(contactEntity == null) {
@@ -192,62 +193,65 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						contactEntity.setMobileNumber(contact);
 						contactEntity.setCity(customMessage.getCity().toUpperCase());
 						contactEntity.setCategory(customMessage.getCategory().toUpperCase());
+						isNew = true;
 					}
-					if (contactEntity.getLastMessageSentTime() != null) {
-						Date currDate = new Date();
-						long diff = currDate.getTime() - contactEntity.getLastMessageSentTime().getTime();
-						long lastSentDiff = diff / (60 * 1000);
-						if (lastSentDiff < resendWaitMin)
-							resend = false;
-					}
-					if (contactEntity.getLastMessageReceivedTime() != null) {
-						Date currDate = new Date();
-						long diff = currDate.getTime() - contactEntity.getLastMessageReceivedTime().getTime();
-						long lastReceivedDiff = diff / (60 * 1000);
-						if (lastReceivedDiff < resendWaitMin)
-							resend = false;
-					} else if (contactEntity.getLastMessageReceivedTime() == null && contactEntity.getMessageSentCount() != null
-							&& contactEntity.getMessageSentCount() >= stopMessageSentCount) {
-						resend = false;
-					}
-					if (resend) {
-						MessageRequest request = new MessageRequest();
-						request.setBody(customMessage.getMessage());
-						request.setPhone(Long.valueOf(contact));
-						try {
-							String url = apiUrl + instanceId + "/checkPhone?token=" + token + "&phone="
-									+ request.getPhone();
-	
-							String responseForCheckPhone = restTemplate.exchange(url, HttpMethod.GET, null, String.class)
-									.getBody();
-							CheckPhoneResponse responseObj = mapper.readValue(responseForCheckPhone,
-									CheckPhoneResponse.class);
-							if (responseObj != null && "exists".equalsIgnoreCase(responseObj.getResult())) {
-								HttpEntity<MessageRequest> entity = new HttpEntity<MessageRequest>(request, headers);
-								url = apiUrl + instanceId + "/sendMessage?token=" + token;
-								System.out.println("URL : " + url);
-								String response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class)
-										.getBody();
-	
-								SendMessageResponse responseObjMessage = mapper.readValue(response,
-										SendMessageResponse.class);
-								System.out.println("Response for : " + contact + " : " + response);
-								
-								if (responseObjMessage.isSent()) {
-									contactEntity.setLastMessageSentTime(new Date());
-									contactEntity.setMessageSentCount(
-											contactEntity.getMessageSentCount() != null ? contactEntity.getMessageSentCount() + 1 : 0);
-									validNumberList.add(contact);
-								//	contactRepo.saveAndFlush(contactEntity);
-								}
-						    } else {
-						    	contactEntity.setWhatsAppExist(false);
-							}
-						} catch (Exception ex) {
-							System.out.println("Error while parsing response : " + ex);
+			//		if(isNew || (contactEntity.getValid() != null && contactEntity.getValid())) {
+						if (contactEntity.getLastMessageSentTime() != null) {
+							Date currDate = new Date();
+							long diff = currDate.getTime() - contactEntity.getLastMessageSentTime().getTime();
+							long lastSentDiff = diff / (60 * 1000);
+							if (lastSentDiff < resendWaitMin)
+								resend = false;
 						}
-					}
-					contactRepo.saveAndFlush(contactEntity);
+						if (contactEntity.getLastMessageReceivedTime() != null) {
+							Date currDate = new Date();
+							long diff = currDate.getTime() - contactEntity.getLastMessageReceivedTime().getTime();
+							long lastReceivedDiff = diff / (60 * 1000);
+							if (lastReceivedDiff < resendWaitMin)
+								resend = false;
+						} else if (contactEntity.getLastMessageReceivedTime() == null && contactEntity.getMessageSentCount() != null
+								&& contactEntity.getMessageSentCount() >= stopMessageSentCount) {
+							resend = false;
+						}
+						if (resend) {
+							MessageRequest request = new MessageRequest();
+							request.setBody(customMessage.getMessage());
+							request.setPhone(Long.valueOf(contact));
+							try {
+								String url = apiUrl + instanceId + "/checkPhone?token=" + token + "&phone="
+										+ request.getPhone();
+		
+								String responseForCheckPhone = restTemplate.exchange(url, HttpMethod.GET, null, String.class)
+										.getBody();
+								CheckPhoneResponse responseObj = mapper.readValue(responseForCheckPhone,
+										CheckPhoneResponse.class);
+								if (responseObj != null && "exists".equalsIgnoreCase(responseObj.getResult())) {
+									HttpEntity<MessageRequest> entity = new HttpEntity<MessageRequest>(request, headers);
+									url = apiUrl + instanceId + "/sendMessage?token=" + token;
+									System.out.println("URL : " + url);
+									String response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class)
+											.getBody();
+		
+									SendMessageResponse responseObjMessage = mapper.readValue(response,
+											SendMessageResponse.class);
+									System.out.println("Response for : " + contact + " : " + response);
+									
+									if (responseObjMessage.isSent()) {
+										contactEntity.setLastMessageSentTime(new Date());
+										contactEntity.setMessageSentCount(
+												contactEntity.getMessageSentCount() != null ? contactEntity.getMessageSentCount() + 1 : 0);
+										validNumberList.add(contact);
+									//	contactRepo.saveAndFlush(contactEntity);
+									}
+							    } else {
+							    	contactEntity.setWhatsAppExist(false);
+								}
+							} catch (Exception ex) {
+								System.out.println("Error while parsing response : " + ex);
+							}
+						}
+						contactRepo.saveAndFlush(contactEntity);
+			//		}
 				}
 			});
 			saveDataForSentMessages(customMessage.getFrom(), validNumberList, customMessage.getCategory());
@@ -526,5 +530,10 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 			e.printStackTrace();
 		}
 		return "OK";
+	}
+
+	@Override
+	public String getMessageForCategory(String category) {
+		return categoryMessageRepo.findMessageByCategory(category);
 	}
 }

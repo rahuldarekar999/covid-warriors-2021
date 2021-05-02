@@ -20,4 +20,6 @@ public interface ContactRepository extends JpaRepository<ContactEntity, Long> {
 	@Query(value="select distinct(c.city) as city from ContactEntity c")
 	List<String> findAllDistinctCity();
 
+	List<ContactEntity> findByCityAndCategoryAndValid(String city, String category, boolean b);
+
 }

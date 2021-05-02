@@ -8,7 +8,8 @@ public class CustomMessage {
     private String message;
     private List<String> mobileList;
     private String from;
-
+    private Object obj;
+    
     public String getCity() {
         return city;
     }
@@ -48,4 +49,13 @@ public class CustomMessage {
     public void setFrom(String from) {
         this.from = from;
     }
+
+	public Object getObj() {
+		return obj;
+	}
+
+	public void setObj(Object obj) {
+		this.obj = obj;
+	}
+  
 }

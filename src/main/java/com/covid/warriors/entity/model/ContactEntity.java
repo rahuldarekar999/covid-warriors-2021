@@ -44,6 +44,10 @@ public class ContactEntity {
 	@Column(name="message_sent_count")
 	private Integer messageSentCount;
 	
+	@Column(name="valid")
+	private Boolean valid;
+	
+	
 	public String getMobileNumber() {
 		return mobileNumber;
 	}
@@ -126,6 +130,14 @@ public class ContactEntity {
 
 	public Boolean getWhatsAppExist() {
 		return whatsAppExist;
+	}
+
+	public Boolean getValid() {
+		return valid;
+	}
+
+	public void setValid(Boolean valid) {
+		this.valid = valid;
 	}
 
 	@Override

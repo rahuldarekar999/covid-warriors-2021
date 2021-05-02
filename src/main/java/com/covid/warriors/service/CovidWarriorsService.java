@@ -23,4 +23,6 @@ public interface CovidWarriorsService {
 
 	long getMinTime();
 
+	String getMessageForCategory(String category);
+
 }

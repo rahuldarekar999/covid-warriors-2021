@@ -30,6 +30,20 @@ public class MessageSenderController {
 		return "Running...!";  
 	}  
 	
+	@RequestMapping(value = "/checkObj", method = RequestMethod.POST)
+	public ResponseEntity<?> check(@RequestBody CustomMessage customMessage) throws JsonProcessingException
+	{  
+		if(customMessage.getObj() != null) { 
+			if(customMessage.getObj() instanceof List) {
+				System.out.println("list : " + customMessage.getObj());
+			} else if(customMessage.getObj() instanceof String) {
+				System.out.println("Strng : " + customMessage.getObj());
+			}
+		}
+	    //String response = covidWarriorsService.sendMessageCustom(customMessage);
+		return ResponseEntity.ok().body("Message Sent Response is : " + true);  
+	}
+	
 	@RequestMapping("/sendMessage")  
 	public ResponseEntity<?> sendMessage(@RequestParam("city") String city, 
 			@RequestParam("category") String category) throws JsonProcessingException   
@@ -81,6 +95,14 @@ public class MessageSenderController {
 	{  	
 		Map<String, Long> responseMap = new HashMap<>();
 		responseMap.put("data", covidWarriorsService.getMinTime());
+		return ResponseEntity.ok().body(responseMap);
+	}
+	
+	@RequestMapping("/getMessage")  
+	public ResponseEntity<?> getMessage(@RequestParam("category") String category) 
+	{  	
+		Map<String, String> responseMap = new HashMap<>();
+		responseMap.put("data", covidWarriorsService.getMessageForCategory(category));
 		return ResponseEntity.ok().body(responseMap);
 	}
 }
