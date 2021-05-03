@@ -46,6 +46,9 @@ public class ContactEntity {
 	
 	@Column(name="valid")
 	private Boolean valid;
+
+	@Column(name = "source")
+	private String source;
 	
 	
 	public String getMobileNumber() {
@@ -138,6 +141,14 @@ public class ContactEntity {
 
 	public void setValid(Boolean valid) {
 		this.valid = valid;
+	}
+
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
 	}
 
 	@Override
