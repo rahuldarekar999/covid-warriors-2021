@@ -18,4 +18,8 @@ public interface SentMessageMetadataRepository extends JpaRepository<SentMessage
 	@Query(value = "select smm from SentMessageMetadataEntity smm where smm.isForward = 1")
 	List<SentMessageMetadataEntity> findAllWhereForwardIsTrue();
 
+	SentMessageMetadataEntity findByFrom(String from);
+
+	SentMessageMetadataEntity findByFromAndCityAndCategory(String from, String city, String category);
+
 }
