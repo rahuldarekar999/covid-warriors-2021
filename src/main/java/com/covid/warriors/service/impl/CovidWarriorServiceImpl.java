@@ -558,9 +558,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 								if(!forwardObj.getSubscribed()) {
 									if(forwardObj.getTo() != null && forwardObj.getTo().contains(receivedFrom)) {
 										messageStr.append("Response from +" + receivedFrom + " \n");
-										messageStr.append("City " + forwardObj.getCity() + " \n");
-										messageStr.append("Category " + forwardObj.getCategory() + " \n");
-										messageStr.append("Message " + message.getBody() + " \n");
+										messageStr.append("City      " + forwardObj.getCity() + " \n");
+										messageStr.append("Category  " + forwardObj.getCategory() + " \n");
+										messageStr.append("Message   " + message.getBody() + " \n");
 										messageStr.append("Click here to reply ");
 										messageStr.append("https://wa.me/" + receivedFrom);
 										request.setBody(messageStr.toString() + " \n");
@@ -572,9 +572,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 									if(!CollectionUtils.isEmpty(entityList)) {
 										entityList.forEach(entity -> {
 											messageStr.append("Response from +" + receivedFrom + " \n");
-											messageStr.append("City " + forwardObj.getCity() + " \n");
-											messageStr.append("Category " + forwardObj.getCategory() + " \n");
-											messageStr.append("Message " + message.getBody() + " \n");
+											messageStr.append("City      " + forwardObj.getCity() + " \n");
+											messageStr.append("Category  " + forwardObj.getCategory() + " \n");
+											messageStr.append("Message   " + message.getBody() + " \n");
 											messageStr.append("Click here to reply ");
 											messageStr.append("https://wa.me/" + receivedFrom);
 											request.setBody(messageStr.toString());
