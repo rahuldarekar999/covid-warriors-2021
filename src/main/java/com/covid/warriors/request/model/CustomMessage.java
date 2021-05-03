@@ -11,6 +11,8 @@ public class CustomMessage {
     private Object obj;
     private boolean isForward;
     
+    private boolean isSubscribed;
+    
     public String getCity() {
         return city;
     }
@@ -65,5 +67,15 @@ public class CustomMessage {
 
 	public void setForward(boolean isForward) {
 		this.isForward = isForward;
+	}
+
+	public boolean isSubscribed() {
+		return isSubscribed;
+	}
+
+	public void setSubscribed(boolean isSubscribed) {
+		this.isSubscribed = isSubscribed;
 	}  
+	
+	
 }

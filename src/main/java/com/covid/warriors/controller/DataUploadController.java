@@ -1,8 +1,9 @@
 package com.covid.warriors.controller;
 
 
-import com.covid.warriors.impl.CovidWarriorServiceImpl;
 import com.covid.warriors.service.OcrService;
+import com.covid.warriors.service.impl.CovidWarriorServiceImpl;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;

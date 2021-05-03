@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.covid.warriors.request.model.WebhookMessageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.covid.warriors.request.model.CustomMessage;
-import com.covid.warriors.request.model.ResponseMessage;
+import com.covid.warriors.request.model.WebhookMessageResponse;
 import com.covid.warriors.response.model.MessageInfo;
 import com.covid.warriors.service.CovidWarriorsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,9 +36,7 @@ public class MessageSenderController {
 		return "Running...!";  
 	}  
 	
-	/////////////////////////////////
-	//below endpoints is for testing purpose only
-	
+	//below endpoint is for testing purpose only
 	@RequestMapping(value="/test", method = RequestMethod.POST) 
 	public ResponseEntity<?> saveFrom(@RequestBody CustomMessage customMessage) throws JsonProcessingException   
 	{  
@@ -60,7 +57,6 @@ public class MessageSenderController {
 	    //String response = covidWarriorsService.sendMessageCustom(customMessage);
 		return ResponseEntity.ok().body("Message Sent Response is : " + true);  
 	}
-	/////////////////////////////////
 	
 	@RequestMapping("/sendMessage")  
 	public ResponseEntity<?> sendMessage(@RequestParam("city") String city, 
@@ -75,7 +71,7 @@ public class MessageSenderController {
 	public ResponseEntity<?> receiveMessage(@RequestBody WebhookMessageResponse message) throws JsonProcessingException
 	{  
 		String response = covidWarriorsService.forwardMessage(message.getMessages());
-		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
+		return ResponseEntity.ok().body("Message Forward Response is : " + response);  
 	}
 	
 	@RequestMapping(value = "/sendMessageCustom", method = RequestMethod.POST)
@@ -85,7 +81,7 @@ public class MessageSenderController {
 	    String response = covidWarriorsService.sendMessageCustom(customMessage);
 		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
 	}
-	
+
 	@RequestMapping("/getResponse")  
 	public ResponseEntity<?> getResponse(@RequestParam("city") String city, 
 			@RequestParam("category") String category) throws JsonProcessingException   
@@ -129,5 +125,12 @@ public class MessageSenderController {
 		Map<String, String> responseMap = new HashMap<>();
 		responseMap.put("data", covidWarriorsService.getMessageForCategory(category));
 		return ResponseEntity.ok().body(responseMap);
+	}
+	
+	@RequestMapping(value="/subscribe", method = RequestMethod.POST) 
+	public ResponseEntity<?> subscribe(@RequestBody CustomMessage customMessage) 
+	{  	
+		covidWarriorsService.saveDataForSentMessages(customMessage, customMessage.getMobileList());
+	    return ResponseEntity.ok().body("Saved");
 	}
 }

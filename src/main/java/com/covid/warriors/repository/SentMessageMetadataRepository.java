@@ -11,7 +11,11 @@ import com.covid.warriors.entity.model.SentMessageMetadataEntity;
 @Repository
 public interface SentMessageMetadataRepository extends JpaRepository<SentMessageMetadataEntity, Long> {
 
+
 	@Query(value = "select smm from SentMessageMetadataEntity smm where smm.isForward = 1 and smm.sentOn is null")
 	List<SentMessageMetadataEntity> findAllWhereSentOnIsNotNullAndForwardIsTrue();
+
+	@Query(value = "select smm from SentMessageMetadataEntity smm where smm.isForward = 1")
+	List<SentMessageMetadataEntity> findAllWhereForwardIsTrue();
 
 }

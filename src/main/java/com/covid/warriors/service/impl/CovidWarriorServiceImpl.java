@@ -1,4 +1,4 @@
-package com.covid.warriors.impl;
+package com.covid.warriors.service.impl;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -174,26 +174,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		if (!CollectionUtils.isEmpty(customMessage.getMobileList())) {
 			List<String> validNumberList = new ArrayList<>();
 			customMessage.getMobileList().forEach(contact -> {
-				contact = contact.replaceAll("[()\\s-]+", "");
-				if(contact.contains("+")) {
-					contact = contact.replace("+", "");
-				}
-				Pattern p1 = Pattern.compile("(91)?[6-9][0-9]{9}");
-				Pattern p2 = Pattern.compile("(0)?[6-9][0-9]{9}");
-				Matcher m1 = p1.matcher(contact);
-				Matcher m2 = p2.matcher(contact);
-				boolean isPhoneWithNineOne = (m1.find() && m1.group().equals(contact));
-				boolean isPhoneWithZero = (m2.find() && m2.group().equals(contact));
-				if(contact.length() == 10) {
-					contact = "91" + contact;
-				} else if(isPhoneWithNineOne) {
-					contact = contact;
-				} else if(isPhoneWithZero) {
-					contact = contact.substring(1, contact.length());
-				}
-				if(contact.length()==10) {
-					contact = "91" + contact;
-				}
+				contact = getPhoneNumber(contact);
 				boolean resend = true;
 				boolean isNew = false;
 				if(contact.length() == 12) {
@@ -205,7 +186,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						contactEntity.setCategory(customMessage.getCategory().toUpperCase());
 						isNew = true;
 					}
-			//		if(isNew || (contactEntity.getValid() != null && contactEntity.getValid())) {
+					if(isNew || (contactEntity.getValid() != null && contactEntity.getValid())) {
 						if (contactEntity.getLastMessageSentTime() != null) {
 							Date currDate = new Date();
 							long diff = currDate.getTime() - contactEntity.getLastMessageSentTime().getTime();
@@ -261,7 +242,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 							}
 						}
 						contactRepo.saveAndFlush(contactEntity);
-			//		}
+					}
 				}
 			});
 			if(StringUtils.isNotBlank(customMessage.getFrom())) {
@@ -274,18 +255,22 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Override
 	public void saveDataForSentMessages(CustomMessage customMessage, List<String> validNumberList) {
 		try {
-			SentMessageMetadataEntity entity = new SentMessageMetadataEntity();
-			String to = String.join(",", validNumberList);
-			entity.setFrom(customMessage.getFrom());
-			entity.setCategory(customMessage.getCategory());
-	//		entity.setSentOn(new Date());	
-			System.out.println("to : " + to);
-			entity.setTo(to);
-			entity.setIsForward(customMessage.isForward());
-			sentMetadataMessageRepo.saveAndFlush(entity);
-		} catch(Exception ex) {
+			if(customMessage.getFrom() != null) {
+				SentMessageMetadataEntity entity = new SentMessageMetadataEntity();
+				String to = String.join(",", validNumberList);
+				entity.setFrom(getPhoneNumber(customMessage.getFrom()));
+				entity.setCategory(customMessage.getCategory());
+				entity.setCity(customMessage.getCity());
+				// entity.setSentOn(new Date());
+				System.out.println("to : " + to);
+				entity.setTo(to);
+				entity.setIsForward(customMessage.isForward());
+				entity.setSubscribed(customMessage.isSubscribed());
+				sentMetadataMessageRepo.saveAndFlush(entity);
+			}
+		} catch (Exception ex) {
 			ex.printStackTrace();
-			System.out.println("Exception while saving data " + ex);	
+			System.out.println("Exception while saving data " + ex);
 		}
 	}
 
@@ -552,13 +537,12 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		return categoryMessageRepo.findMessageByCategory(category);
 	}
 
+
 	@Override
 	public String forwardMessage(List<ResponseMessage> messages) {
 		if(forwardFeatureOn) {
-			List<SentMessageMetadataEntity> listOfNumbersToForwardMessage = sentMetadataMessageRepo.findAllWhereSentOnIsNotNullAndForwardIsTrue();
+			List<SentMessageMetadataEntity> listOfNumbersToForwardMessage = sentMetadataMessageRepo.findAllWhereForwardIsTrue();
 			if(!CollectionUtils.isEmpty(listOfNumbersToForwardMessage)) {
-				HttpHeaders headers = new HttpHeaders();
-				headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 				listOfNumbersToForwardMessage.forEach(forwardObj ->{
 					if(forwardObj.getIsForward() != null && forwardObj.getIsForward()) {
 						messages.forEach(message -> {
@@ -566,31 +550,26 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 							StringBuilder messageStr = new StringBuilder();
 							String receivedFrom = message.getChatId() != null ? message.getChatId().substring(0, message.getChatId().indexOf("@")) : null;
 							if(receivedFrom != null && !message.isFromMe()) {
-								if(forwardObj.getTo() != null && forwardObj.getTo().contains(receivedFrom)) {
-									messageStr.append("From : " + receivedFrom);
-									messageStr.append("Message : " + message.getBody());
-									request.setBody(messageStr.toString());
-									request.setPhone(Long.valueOf(forwardObj.getFrom()));
-									try {
-										String url = apiUrl + instanceIdForwards + "/checkPhone?token=" + tokenForForwards + "&phone="
-												+ request.getPhone();
-				
-										String responseForCheckPhone = restTemplate.exchange(url, HttpMethod.GET, null, String.class)
-												.getBody();
-										CheckPhoneResponse responseObj = mapper.readValue(responseForCheckPhone,
-												CheckPhoneResponse.class);
-										if (responseObj != null && "exists".equalsIgnoreCase(responseObj.getResult())) {
-											HttpEntity<MessageRequest> entity = new HttpEntity<MessageRequest>(request, headers);
-											url = apiUrl + instanceIdForwards + "/sendMessage?token=" + tokenForForwards;
-											System.out.println("URL : " + url);
-											String response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class)
-													.getBody();
-				
-											SendMessageResponse responseObjMessage = mapper.readValue(response,
-													SendMessageResponse.class);
-										} 
-									} catch (Exception ex) {
-										System.out.println("Error while parsing response for forward: " + ex);
+								if(!forwardObj.getSubscribed()) {
+									if(forwardObj.getTo() != null && forwardObj.getTo().contains(receivedFrom)) {
+										messageStr.append("From : " + receivedFrom + " \n");
+										messageStr.append("Message : " + message.getBody() + " \n");
+										request.setBody(messageStr.toString() + " \n");
+										request.setPhone(Long.valueOf(forwardObj.getFrom()));
+										forwardMessageToNumber(request);
+									}
+								} else {
+									List<ContactEntity> entityList = contactRepo.findByCityAndCategoryAndValid(forwardObj.getCity(), forwardObj.getCategory(), true);
+									if(!CollectionUtils.isEmpty(entityList)) {
+										entityList.forEach(entity -> {
+											messageStr.append("Response From : " + receivedFrom + " \n");
+											messageStr.append("City : " + receivedFrom + " \n");
+											messageStr.append("Category : " + forwardObj.getCategory() + " \n");
+											messageStr.append("Message : " + message.getBody() + " \n");
+											request.setBody(messageStr.toString());
+											request.setPhone(Long.valueOf(forwardObj.getFrom()));
+											forwardMessageToNumber(request);	
+										});										
 									}
 								}
 							}
@@ -600,9 +579,54 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					}
 				});
 			}
+				
 		} else {
 			System.out.println("Msg received : " + messages);
 		}
 		return "Response Forwatded";
+	}
+
+	private void forwardMessageToNumber(MessageRequest request) {
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+			String url = apiUrl + instanceIdForwards + "/checkPhone?token=" + tokenForForwards + "&phone="
+					+ request.getPhone();
+
+			String responseForCheckPhone = restTemplate.exchange(url, HttpMethod.GET, null, String.class).getBody();
+			CheckPhoneResponse responseObj = mapper.readValue(responseForCheckPhone, CheckPhoneResponse.class);
+			if (responseObj != null && "exists".equalsIgnoreCase(responseObj.getResult())) {
+				HttpEntity<MessageRequest> entity = new HttpEntity<MessageRequest>(request, headers);
+				url = apiUrl + instanceIdForwards + "/sendMessage?token=" + tokenForForwards;
+				System.out.println("URL : " + url);
+				restTemplate.exchange(url, HttpMethod.POST, entity, String.class).getBody();
+			}
+		} catch (Exception ex) {
+			System.out.println("Error while parsing response for forward: " + ex);
+		}
+	}
+	
+	private String getPhoneNumber(String contact) {
+		contact.replaceAll("[()\\s-]+", "");
+		if (contact.contains("+")) {
+			contact = contact.replace("+", "");
+		}
+		Pattern p1 = Pattern.compile("(91)?[6-9][0-9]{9}");
+		Pattern p2 = Pattern.compile("(0)?[6-9][0-9]{9}");
+		Matcher m1 = p1.matcher(contact);
+		Matcher m2 = p2.matcher(contact);
+		boolean isPhoneWithNineOne = (m1.find() && m1.group().equals(contact));
+		boolean isPhoneWithZero = (m2.find() && m2.group().equals(contact));
+		if (contact.length() == 10) {
+			contact = "91" + contact;
+		} else if (isPhoneWithNineOne) {
+			contact = contact;
+		} else if (isPhoneWithZero) {
+			contact = contact.substring(1, contact.length());
+		}
+		if (contact.length() == 10) {
+			contact = "91" + contact;
+		}
+		return contact;
 	}
 }

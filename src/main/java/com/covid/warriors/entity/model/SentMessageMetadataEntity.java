@@ -32,6 +32,13 @@ public class SentMessageMetadataEntity {
 	@Column(name="forward_flag")
 	private Boolean isForward;
 	
+	@Column(name="subscribed")
+	private Boolean subscribed;
+	
+	@Column(name="city")
+	private String city;
+	
+	
 	public long getId() {
 		return id;
 	}
@@ -78,6 +85,22 @@ public class SentMessageMetadataEntity {
 
 	public void setIsForward(Boolean isForward) {
 		this.isForward = isForward;
+	}
+
+	public Boolean getSubscribed() {
+		return subscribed;
+	}
+
+	public void setSubscribed(Boolean subscribed) {
+		this.subscribed = subscribed;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
 	}
 
 	@Override
