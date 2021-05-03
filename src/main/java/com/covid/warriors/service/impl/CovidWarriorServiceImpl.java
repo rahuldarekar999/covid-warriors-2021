@@ -260,13 +260,14 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				if(entity == null) {
 					entity = new SentMessageMetadataEntity();
 				}
-				String to = String.join(",", validNumberList);
+				if(!customMessage.isSubscribed()) {
+					String to = String.join(",", validNumberList);
+					entity.setTo(to);
+				}
 				entity.setFrom(getPhoneNumber(customMessage.getFrom()));
 				entity.setCategory(customMessage.getCategory() != null ? customMessage.getCategory().toUpperCase():"");
 				entity.setCity(customMessage.getCity() != null ? customMessage.getCity().toUpperCase() : "'");
 				// entity.setSentOn(new Date());
-				System.out.println("to : " + to);
-				entity.setTo(to);
 				entity.setIsForward(customMessage.isForward());
 				entity.setSubscribed(customMessage.isSubscribed());
 				sentMetadataMessageRepo.saveAndFlush(entity);
