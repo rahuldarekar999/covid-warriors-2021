@@ -80,6 +80,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Value("${message.response}")
 	private String responseMessage;
 
+	@Value("${subscription.message}")
+	private String subscriptionMessage; 
+	
 //	@Value("#{'${valid.response.black.list}'.split(',')}")
 	@Value("#{'${valid.response.black.list}'.split(',')}")
 	private List<String> blackListOfResponses;
@@ -95,10 +98,12 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 
 	@Autowired
 	private CategoryMessageRepository categoryMessageRepo;
-
 	
 	@Autowired
 	private SentMessageMetadataRepository sentMetadataMessageRepo;
+	
+	@Autowired
+	private AsyncCovidWarriorServiceImpl asyncCovidWarriorServiceImpl;
 	
 	@Override
 	public String sendMessage(String city, String category) {
@@ -274,7 +279,16 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				// entity.setSentOn(new Date());
 				entity.setIsForward(customMessage.isForward());
 				entity.setSubscribed(customMessage.isSubscribed());
-				sentMetadataMessageRepo.saveAndFlush(entity);
+				entity = sentMetadataMessageRepo.saveAndFlush(entity);
+				if(entity != null) {
+					MessageRequest request = new MessageRequest();
+					String messageStr = subscriptionMessage;
+					messageStr = messageStr.replace("!city!", customMessage.getCity()).replace("!cat!", customMessage.getCategory());
+					request.setBody(messageStr);
+					request.setPhone(Long.valueOf(entity.getFrom()));
+					
+					forwardMessageToNumber(request);
+				}
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -560,31 +574,38 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				listOfNumbersToForwardMessage.forEach(forwardObj ->{
 					if(forwardObj.getIsForward() != null && forwardObj.getIsForward()) {
 						messages.forEach(message -> {
-							MessageRequest request = new MessageRequest();
+							
 							String receivedFrom = message.getChatId() != null ? message.getChatId().substring(0, message.getChatId().indexOf("@")) : null;
 							if(receivedFrom != null && !message.isFromMe()) {
 								if(!forwardObj.getSubscribed()) {
 									if(forwardObj.getTo() != null && forwardObj.getTo().contains(receivedFrom)) {
 										String messageStr = responseMessage;
+										MessageRequest request = new MessageRequest();
 										messageStr = messageStr.replaceAll("!mob!", receivedFrom).replace("!city!", forwardObj.getCity()).replace("!cat!", forwardObj.getCategory()).replace("!msg!", message.getBody());
 										request.setBody(messageStr + " \n");
 										request.setPhone(Long.valueOf(forwardObj.getFrom()));
-										System.out.println("frwd : " + request);
+									//	System.out.println("frwd : " + request);
 										forwardMessageToNumber(request);
 									}
 								} else {
-									List<ContactEntity> entityList = contactRepo.findByCityAndCategoryAndValid(forwardObj.getCity(), forwardObj.getCategory(), true);
-									if(!CollectionUtils.isEmpty(entityList)) {
-										entityList.forEach(entity -> {
-											if(entity.getMobileNumber().equals(receivedFrom)) {
-												String messageStr = responseMessage;
-												messageStr = messageStr.replaceAll("!mob!", receivedFrom).replace("!city!", forwardObj.getCity()).replace("!cat!", forwardObj.getCategory()).replace("!msg!", message.getBody());
-												request.setBody(messageStr);
-												request.setPhone(Long.valueOf(forwardObj.getFrom()));
-												System.out.println("sub : " + request);
-												forwardMessageToNumber(request);	
-											}
-										});										
+									if("ALL".equalsIgnoreCase(forwardObj.getCategory())) {
+										List<ContactEntity> entityList = contactRepo.findByValid(true);
+										asyncCovidWarriorServiceImpl.forwardMessage(entityList, forwardObj, receivedFrom, message);
+									} else {
+										List<ContactEntity> entityList = contactRepo.findByCityAndCategoryAndValid(forwardObj.getCity(), forwardObj.getCategory(), true);
+										if(!CollectionUtils.isEmpty(entityList)) {
+											entityList.forEach(entity -> {
+												if(entity.getMobileNumber().equals(receivedFrom)) {
+													MessageRequest request = new MessageRequest();
+													String messageStr = responseMessage;
+													messageStr = messageStr.replaceAll("!mob!", receivedFrom).replace("!city!", forwardObj.getCity()).replace("!cat!", forwardObj.getCategory()).replace("!msg!", message.getBody());
+													request.setBody(messageStr);
+													request.setPhone(Long.valueOf(forwardObj.getFrom()));
+											//		System.out.println("sub : " + request);
+													forwardMessageToNumber(request);	
+												}
+											});										
+										}
 									}
 								}
 							}

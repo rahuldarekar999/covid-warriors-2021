@@ -22,4 +22,8 @@ public interface ContactRepository extends JpaRepository<ContactEntity, Long> {
 
 	List<ContactEntity> findByCityAndCategoryAndValid(String city, String category, boolean b);
 
+	List<ContactEntity> findByCity(String city, boolean b);
+
+	List<ContactEntity> findByValid(boolean b);
+
 }
