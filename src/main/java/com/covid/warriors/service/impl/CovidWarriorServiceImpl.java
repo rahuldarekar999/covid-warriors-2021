@@ -184,6 +184,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						contactEntity.setMobileNumber(contact);
 						contactEntity.setCity(customMessage.getCity().toUpperCase());
 						contactEntity.setCategory(customMessage.getCategory().toUpperCase());
+						contactEntity.setValid(true);
 						isNew = true;
 					}
 					if(isNew || (contactEntity.getValid() != null && contactEntity.getValid())) {
@@ -556,8 +557,10 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 							if(receivedFrom != null && !message.isFromMe()) {
 								if(!forwardObj.getSubscribed()) {
 									if(forwardObj.getTo() != null && forwardObj.getTo().contains(receivedFrom)) {
-										messageStr.append("From : " + receivedFrom + " \n");
-										messageStr.append("Message : " + message.getBody() + " \n");
+										messageStr.append("Response from +" + receivedFrom + " \n");
+										messageStr.append("City " + forwardObj.getCity() + " \n");
+										messageStr.append("Category " + forwardObj.getCategory() + " \n");
+										messageStr.append("Message " + message.getBody() + " \n");
 										request.setBody(messageStr.toString() + " \n");
 										request.setPhone(Long.valueOf(forwardObj.getFrom()));
 										forwardMessageToNumber(request);
@@ -566,10 +569,10 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 									List<ContactEntity> entityList = contactRepo.findByCityAndCategoryAndValid(forwardObj.getCity(), forwardObj.getCategory(), true);
 									if(!CollectionUtils.isEmpty(entityList)) {
 										entityList.forEach(entity -> {
-											messageStr.append("Response From : " + receivedFrom + " \n");
-											messageStr.append("City : " + receivedFrom + " \n");
-											messageStr.append("Category : " + forwardObj.getCategory() + " \n");
-											messageStr.append("Message : " + message.getBody() + " \n");
+											messageStr.append("Response from +" + receivedFrom + " \n");
+											messageStr.append("City " + forwardObj.getCity() + " \n");
+											messageStr.append("Category " + forwardObj.getCategory() + " \n");
+											messageStr.append("Message " + message.getBody() + " \n");
 											request.setBody(messageStr.toString());
 											request.setPhone(Long.valueOf(forwardObj.getFrom()));
 											forwardMessageToNumber(request);	
