@@ -561,6 +561,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 										messageStr.append("City " + forwardObj.getCity() + " \n");
 										messageStr.append("Category " + forwardObj.getCategory() + " \n");
 										messageStr.append("Message " + message.getBody() + " \n");
+										messageStr.append("Click here to reply \n");
+										messageStr.append("Click here to reply \n");
+										messageStr.append("https://wa.me/" + receivedFrom);
 										request.setBody(messageStr.toString() + " \n");
 										request.setPhone(Long.valueOf(forwardObj.getFrom()));
 										forwardMessageToNumber(request);
@@ -573,6 +576,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 											messageStr.append("City " + forwardObj.getCity() + " \n");
 											messageStr.append("Category " + forwardObj.getCategory() + " \n");
 											messageStr.append("Message " + message.getBody() + " \n");
+											messageStr.append("https://wa.me/" + receivedFrom);
 											request.setBody(messageStr.toString());
 											request.setPhone(Long.valueOf(forwardObj.getFrom()));
 											forwardMessageToNumber(request);	
