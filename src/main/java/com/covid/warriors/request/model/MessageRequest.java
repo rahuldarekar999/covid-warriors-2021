@@ -24,4 +24,10 @@ public class MessageRequest implements Serializable{
 	public void setPhone(long phone) {
 		this.phone = phone;
 	}
+	
+	@Override
+	public String toString() {
+		return "MessageRequest [body=" + body + ", phone=" + phone + "]";
+	}
+	
 }

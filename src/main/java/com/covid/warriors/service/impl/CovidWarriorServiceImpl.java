@@ -76,6 +76,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	
 	@Value("${forward.feature}")
 	private boolean forwardFeatureOn;
+	
+	@Value("${message.response}")
+	private String responseMessage;
 
 //	@Value("#{'${valid.response.black.list}'.split(',')}")
 	@Value("#{'${valid.response.black.list}'.split(',')}")
@@ -438,6 +441,12 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		numList.add("23423");
 		String numListStr = String.join(",", numList);
 		System.out.println(numListStr);
+		
+		String messageStr = "Response from  +!mob! (from https://indiafightbacks.com) \nCity      !city! Category  !cat! \nMessage !msg! \nhttps://wa.me/!mob!";
+		
+		messageStr = messageStr.replaceAll("!mob!", "123456").replace("!city!", "PUNE").replace("!cat!", "OXY").replace("!msg!", "TEST MSG");
+		
+		System.out.println("test -> " + messageStr);
 	}
 
 	@Override
@@ -552,34 +561,29 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					if(forwardObj.getIsForward() != null && forwardObj.getIsForward()) {
 						messages.forEach(message -> {
 							MessageRequest request = new MessageRequest();
-							StringBuilder messageStr = new StringBuilder();
 							String receivedFrom = message.getChatId() != null ? message.getChatId().substring(0, message.getChatId().indexOf("@")) : null;
 							if(receivedFrom != null && !message.isFromMe()) {
 								if(!forwardObj.getSubscribed()) {
 									if(forwardObj.getTo() != null && forwardObj.getTo().contains(receivedFrom)) {
-										messageStr.append("Response from +" + receivedFrom + " \n");
-										messageStr.append("City      " + forwardObj.getCity() + " \n");
-										messageStr.append("Category  " + forwardObj.getCategory() + " \n");
-										messageStr.append("Message   " + message.getBody() + " \n");
-										messageStr.append("Click here to reply ");
-										messageStr.append("https://wa.me/" + receivedFrom);
-										request.setBody(messageStr.toString() + " \n");
+										String messageStr = responseMessage;
+										messageStr = messageStr.replaceAll("!mob!", receivedFrom).replace("!city!", forwardObj.getCity()).replace("!cat!", forwardObj.getCategory()).replace("!msg!", message.getBody());
+										request.setBody(messageStr + " \n");
 										request.setPhone(Long.valueOf(forwardObj.getFrom()));
+										System.out.println("frwd : " + request);
 										forwardMessageToNumber(request);
 									}
 								} else {
 									List<ContactEntity> entityList = contactRepo.findByCityAndCategoryAndValid(forwardObj.getCity(), forwardObj.getCategory(), true);
 									if(!CollectionUtils.isEmpty(entityList)) {
 										entityList.forEach(entity -> {
-											messageStr.append("Response from +" + receivedFrom + " \n");
-											messageStr.append("City      " + forwardObj.getCity() + " \n");
-											messageStr.append("Category  " + forwardObj.getCategory() + " \n");
-											messageStr.append("Message   " + message.getBody() + " \n");
-											messageStr.append("Click here to reply ");
-											messageStr.append("https://wa.me/" + receivedFrom);
-											request.setBody(messageStr.toString());
-											request.setPhone(Long.valueOf(forwardObj.getFrom()));
-											forwardMessageToNumber(request);	
+											if(entity.getMobileNumber().equals(receivedFrom)) {
+												String messageStr = responseMessage;
+												messageStr = messageStr.replaceAll("!mob!", receivedFrom).replace("!city!", forwardObj.getCity()).replace("!cat!", forwardObj.getCategory()).replace("!msg!", message.getBody());
+												request.setBody(messageStr);
+												request.setPhone(Long.valueOf(forwardObj.getFrom()));
+												System.out.println("sub : " + request);
+												forwardMessageToNumber(request);	
+											}
 										});										
 									}
 								}
