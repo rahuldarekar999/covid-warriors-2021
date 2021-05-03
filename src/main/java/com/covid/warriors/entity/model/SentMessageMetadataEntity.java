@@ -10,25 +10,28 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="SENT_MSG_METADATA")
+@Table(name="sent_msg_metadata")
 public class SentMessageMetadataEntity {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 	
-	@Column(name = "from")
+	@Column(name = "from_mob")
 	private String from;
 	
 	@Column(name = "category")
 	private String category;
 	
-	@Column(name = "to")
+	@Column(name = "to_mob")
 	private String to;
 	
 	@Column(name="sent_on")
 	private Date sentOn;
-
+	
+	@Column(name="forward_flag")
+	private Boolean isForward;
+	
 	public long getId() {
 		return id;
 	}
@@ -67,6 +70,14 @@ public class SentMessageMetadataEntity {
 
 	public void setCategory(String category) {
 		this.category = category;
+	}
+
+	public Boolean getIsForward() {
+		return isForward;
+	}
+
+	public void setIsForward(Boolean isForward) {
+		this.isForward = isForward;
 	}
 
 	@Override

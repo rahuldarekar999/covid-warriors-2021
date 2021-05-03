@@ -35,6 +35,7 @@ import com.covid.warriors.repository.ContactRepository;
 import com.covid.warriors.repository.SentMessageMetadataRepository;
 import com.covid.warriors.request.model.CustomMessage;
 import com.covid.warriors.request.model.MessageRequest;
+import com.covid.warriors.request.model.ResponseMessage;
 import com.covid.warriors.response.model.CheckPhoneResponse;
 import com.covid.warriors.response.model.GetMessagesResponse;
 import com.covid.warriors.response.model.MessageInfo;
@@ -55,6 +56,12 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Value("${instance.id}")
 	private String instanceId;
 
+	@Value("${instance.id.forward}")
+	private String instanceIdForwards;		
+	
+	@Value("${token.forward}")
+	private String tokenForForwards;		
+	
 	@Value("${token}")
 	private String token;
 
@@ -66,6 +73,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	
 	@Value("${days.before}")
 	private int daysBefore;
+	
+	@Value("${forward.feature}")
+	private boolean forwardFeatureOn;
 
 //	@Value("#{'${valid.response.black.list}'.split(',')}")
 	@Value("#{'${valid.response.black.list}'.split(',')}")
@@ -254,22 +264,27 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 			//		}
 				}
 			});
-			saveDataForSentMessages(customMessage.getFrom(), validNumberList, customMessage.getCategory());
+			if(StringUtils.isNotBlank(customMessage.getFrom())) {
+				saveDataForSentMessages(customMessage, validNumberList);
+			}
 			return "Message Successfully Sent";
 		}
 		return "No Data for given City And Category";
 	}
-
-	private void saveDataForSentMessages(String from, List<String> validNumberList, String category) {
+	@Override
+	public void saveDataForSentMessages(CustomMessage customMessage, List<String> validNumberList) {
 		try {
 			SentMessageMetadataEntity entity = new SentMessageMetadataEntity();
 			String to = String.join(",", validNumberList);
-			entity.setFrom(from);
-			entity.setCategory(category);
-			entity.setSentOn(new Date());	
+			entity.setFrom(customMessage.getFrom());
+			entity.setCategory(customMessage.getCategory());
+	//		entity.setSentOn(new Date());	
+			System.out.println("to : " + to);
 			entity.setTo(to);
+			entity.setIsForward(customMessage.isForward());
 			sentMetadataMessageRepo.saveAndFlush(entity);
 		} catch(Exception ex) {
+			ex.printStackTrace();
 			System.out.println("Exception while saving data " + ex);	
 		}
 	}
@@ -535,5 +550,59 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Override
 	public String getMessageForCategory(String category) {
 		return categoryMessageRepo.findMessageByCategory(category);
+	}
+
+	@Override
+	public String forwardMessage(List<ResponseMessage> messages) {
+		if(forwardFeatureOn) {
+			List<SentMessageMetadataEntity> listOfNumbersToForwardMessage = sentMetadataMessageRepo.findAllWhereSentOnIsNotNullAndForwardIsTrue();
+			if(!CollectionUtils.isEmpty(listOfNumbersToForwardMessage)) {
+				HttpHeaders headers = new HttpHeaders();
+				headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+				listOfNumbersToForwardMessage.forEach(forwardObj ->{
+					if(forwardObj.getIsForward() != null && forwardObj.getIsForward()) {
+						messages.forEach(message -> {
+							MessageRequest request = new MessageRequest();
+							StringBuilder messageStr = new StringBuilder();
+							String receivedFrom = message.getChatId() != null ? message.getChatId().substring(0, message.getChatId().indexOf("@")) : null;
+							if(receivedFrom != null && !message.isFromMe()) {
+								if(forwardObj.getTo() != null && forwardObj.getTo().contains(receivedFrom)) {
+									messageStr.append("From : " + receivedFrom);
+									messageStr.append("Message : " + message.getBody());
+									request.setBody(messageStr.toString());
+									request.setPhone(Long.valueOf(forwardObj.getFrom()));
+									try {
+										String url = apiUrl + instanceIdForwards + "/checkPhone?token=" + tokenForForwards + "&phone="
+												+ request.getPhone();
+				
+										String responseForCheckPhone = restTemplate.exchange(url, HttpMethod.GET, null, String.class)
+												.getBody();
+										CheckPhoneResponse responseObj = mapper.readValue(responseForCheckPhone,
+												CheckPhoneResponse.class);
+										if (responseObj != null && "exists".equalsIgnoreCase(responseObj.getResult())) {
+											HttpEntity<MessageRequest> entity = new HttpEntity<MessageRequest>(request, headers);
+											url = apiUrl + instanceIdForwards + "/sendMessage?token=" + tokenForForwards;
+											System.out.println("URL : " + url);
+											String response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class)
+													.getBody();
+				
+											SendMessageResponse responseObjMessage = mapper.readValue(response,
+													SendMessageResponse.class);
+										} 
+									} catch (Exception ex) {
+										System.out.println("Error while parsing response for forward: " + ex);
+									}
+								}
+							}
+						});
+						forwardObj.setSentOn(new Date());
+						sentMetadataMessageRepo.saveAndFlush(forwardObj);
+					}
+				});
+			}
+		} else {
+			System.out.println("Msg received : " + messages);
+		}
+		return "Response Forwatded";
 	}
 }

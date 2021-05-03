@@ -4,13 +4,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.covid.warriors.request.model.CustomMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.covid.warriors.request.model.CustomMessage;
+import com.covid.warriors.request.model.ResponseMessage;
 import com.covid.warriors.response.model.MessageInfo;
 import com.covid.warriors.service.CovidWarriorsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,6 +36,16 @@ public class MessageSenderController {
 		return "Running...!";  
 	}  
 	
+	/////////////////////////////////
+	//below endpoints is for testing purpose only
+	
+	@RequestMapping(value="/test", method = RequestMethod.POST) 
+	public ResponseEntity<?> saveFrom(@RequestBody CustomMessage customMessage) throws JsonProcessingException   
+	{  
+		covidWarriorsService.saveDataForSentMessages(customMessage, customMessage.getMobileList());
+	    return ResponseEntity.ok().body("Saved");
+	}
+	
 	@RequestMapping(value = "/checkObj", method = RequestMethod.POST)
 	public ResponseEntity<?> check(@RequestBody CustomMessage customMessage) throws JsonProcessingException
 	{  
@@ -43,6 +59,7 @@ public class MessageSenderController {
 	    //String response = covidWarriorsService.sendMessageCustom(customMessage);
 		return ResponseEntity.ok().body("Message Sent Response is : " + true);  
 	}
+	/////////////////////////////////
 	
 	@RequestMapping("/sendMessage")  
 	public ResponseEntity<?> sendMessage(@RequestParam("city") String city, 
@@ -50,6 +67,13 @@ public class MessageSenderController {
 	{  
 		
 	    String response = covidWarriorsService.sendMessage(city, category);
+		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
+	}
+	
+	@RequestMapping("/receiveMessage")  
+	public ResponseEntity<?> receiveMessage(@RequestBody List<ResponseMessage> messages) throws JsonProcessingException   
+	{  
+		String response = covidWarriorsService.forwardMessage(messages);
 		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
 	}
 	

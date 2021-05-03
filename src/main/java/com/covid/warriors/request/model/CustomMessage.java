@@ -9,6 +9,7 @@ public class CustomMessage {
     private List<String> mobileList;
     private String from;
     private Object obj;
+    private boolean isForward;
     
     public String getCity() {
         return city;
@@ -57,5 +58,12 @@ public class CustomMessage {
 	public void setObj(Object obj) {
 		this.obj = obj;
 	}
-  
+
+	public boolean isForward() {
+		return isForward;
+	}
+
+	public void setForward(boolean isForward) {
+		this.isForward = isForward;
+	}  
 }

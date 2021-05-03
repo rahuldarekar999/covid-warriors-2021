@@ -2,9 +2,9 @@ package com.covid.warriors.service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.covid.warriors.request.model.CustomMessage;
+import com.covid.warriors.request.model.ResponseMessage;
 import com.covid.warriors.response.model.MessageInfo;
 
 public interface CovidWarriorsService {
@@ -24,5 +24,9 @@ public interface CovidWarriorsService {
 	long getMinTime();
 
 	String getMessageForCategory(String category);
+
+	void saveDataForSentMessages(CustomMessage customMessage, List<String> validNumberList);
+
+	String forwardMessage(List<ResponseMessage> messages);
 
 }
