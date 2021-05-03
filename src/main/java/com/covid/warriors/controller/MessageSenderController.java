@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.covid.warriors.request.model.WebhookMessageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -70,10 +71,10 @@ public class MessageSenderController {
 		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
 	}
 	
-	@RequestMapping("/receiveMessage")  
-	public ResponseEntity<?> receiveMessage(@RequestBody List<ResponseMessage> messages) throws JsonProcessingException   
+	@RequestMapping(value = "/receiveMessage", method = RequestMethod.POST)
+	public ResponseEntity<?> receiveMessage(@RequestBody WebhookMessageResponse message) throws JsonProcessingException
 	{  
-		String response = covidWarriorsService.forwardMessage(messages);
+		String response = covidWarriorsService.forwardMessage(message.getMessages());
 		return ResponseEntity.ok().body("Message Sent Response is : " + response);  
 	}
 	
