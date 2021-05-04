@@ -28,8 +28,7 @@ import java.util.*;
 public class OcrService {
     private String key = "18c3e55fcc4c498591ebb2dbddf7f55f";
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     public String uploadImaageForProcessing(MultipartFile file) {
         try
