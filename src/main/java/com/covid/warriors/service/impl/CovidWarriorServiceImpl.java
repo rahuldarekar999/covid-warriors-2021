@@ -259,7 +259,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						
 						List<MessageInfo> messages = getResponses(entity.getCity(), entity.getCategory(), forwardBefore);
 						System.out.println("message count " + messages.size());
-						getPositiveMessages(messages, customMessage.getCity(), customMessage.getCategory(), false);
+						messages = getPositiveMessagesForForward(messages);
 						int msgCounter = 0;
 						for(MessageInfo msg : messages){
 							if(msgCounter < forwardMsgLimit) {
@@ -284,6 +284,21 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 			ex.printStackTrace();
 			System.out.println("Exception while saving data " + ex);
 		}
+	}
+
+	private List<MessageInfo> getPositiveMessagesForForward(List<MessageInfo> messages) {
+		List<MessageInfo> validMessages = new ArrayList<>();
+		for (MessageInfo messageInfo : messages) {
+			if (StringUtils.isNotBlank(messageInfo.getBody())) {
+					blackListOfForwardResponses.stream().forEach(msg -> {
+						if (StringUtils.contains(messageInfo.getBody().toLowerCase(), msg)) {
+							messageInfo.setValid(false);
+							validMessages.add(messageInfo);
+						}
+					});
+			}
+		}
+		return validMessages;
 	}
 
 	private String prepareMessage(String city, String category, String from, String subCatText) {
