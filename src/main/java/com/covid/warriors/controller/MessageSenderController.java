@@ -88,7 +88,7 @@ public class MessageSenderController {
 	{  
 		
 		List<MessageInfo> messages = covidWarriorsService.getResponses(city, category);
-		return ResponseEntity.ok().body(covidWarriorsService.getPositiveMessages(messages));
+		return ResponseEntity.ok().body(covidWarriorsService.getPositiveMessages(messages, city, category));
 	}
 	
 	@RequestMapping("/getCity")  

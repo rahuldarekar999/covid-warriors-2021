@@ -13,7 +13,7 @@ public interface CovidWarriorsService {
 
 	List<MessageInfo> getResponses(String city, String category);
 
-	Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messages);
+	Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messages, String city, String category);
 
 	String sendMessageCustom(CustomMessage customMessage);
 

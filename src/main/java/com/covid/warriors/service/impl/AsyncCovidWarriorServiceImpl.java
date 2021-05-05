@@ -82,8 +82,13 @@ public class AsyncCovidWarriorServiceImpl {
 				}
 			});										
 		}
-		forwardObj.setSentOn(new Date());
-		sentMetadataMessageRepo.saveAndFlush(forwardObj);
+		try {
+			forwardObj.setSentOn(new Date());
+			sentMetadataMessageRepo.saveAndFlush(forwardObj);
+		} catch(Exception ex) {
+			System.out.println("Exception while saving subscribed user object : " + ex);
+			ex.printStackTrace();
+		}
 	}
 	
 	@Async
@@ -94,13 +99,14 @@ public class AsyncCovidWarriorServiceImpl {
 		boolean resend = true;
 		boolean isNew = false;
 		if(contact.length() == 12) {
-			ContactEntity contactEntity = contactRepo.findByMobileNumberAndCityAndCategory(contact, city, category);
+			ContactEntity contactEntity = contactRepo.findByMobileNumberAndCityAndCategoryAndValid(contact, city, category, true);
 			if(contactEntity == null) {
 				contactEntity = new ContactEntity();
 				contactEntity.setMobileNumber(contact);
 				contactEntity.setCity(city.toUpperCase());
 				contactEntity.setCategory(category.toUpperCase());
 				contactEntity.setValid(true);
+				contactEntity.setSource("WEBSITE");
 				isNew = true;
 			}
 			if(isNew || (contactEntity.getValid() != null && contactEntity.getValid())) {

@@ -23,6 +23,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
@@ -175,6 +176,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	}
 	
 	@Override
+	@Async
 	public String sendMessageCustom(CustomMessage customMessage) {
 		if (!CollectionUtils.isEmpty(customMessage.getMobileList())) {
 			customMessage.getMobileList().forEach(contact -> {
@@ -282,23 +284,25 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				try {
 					System.out.println("Contact checking : " + response.getChatIdMobileNumber());
 					ContactEntity contact = contactRepo
-							.findByMobileNumberAndCityAndCategory(response.getChatIdMobileNumber(), city, category);
+							.findByMobileNumberAndCityAndCategoryAndValid(response.getChatIdMobileNumber(), city, category, true);
 					Date responseTime = new Date(response.getTime());
-					Date currTime = new Date();
 					boolean update = false;
-					if (contact.getLastMessageReceivedTime() == null ||
-							contact.getLastMessageReceivedTime().before(responseTime)) {
-						contact.setLastMessageReceivedTime(new Date(response.getTime()));
-						update = true;
-					}
-					if (contact.getMessageSentCount() == null || contact.getMessageSentCount() > 0) {
-						contact.setMessageSentCount(0);
-						update = true;
-					}
-					if (update) {
-						contactRepo.saveAndFlush(contact);
+					if(contact != null) {
+						if (contact.getLastMessageReceivedTime() == null ||
+								contact.getLastMessageReceivedTime().before(responseTime)) {
+							contact.setLastMessageReceivedTime(new Date(response.getTime()));
+							update = true;
+						}
+						if (contact.getMessageSentCount() == null || contact.getMessageSentCount() > 0) {
+							contact.setMessageSentCount(0);
+							update = true;
+						}
+						if (update) {
+							contactRepo.saveAndFlush(contact);
+						}
 					}
 				} catch (Exception ex) {
+					ex.printStackTrace();
 					System.out.println("Error while storing response time : " + ex.toString());
 				}
 			});
@@ -390,7 +394,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	}
 
 	@Override
-	public Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messageInfos) {
+	public Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messageInfos, String city, String category) {
 		if (Objects.nonNull(messageInfos) && !messageInfos.isEmpty()) {
 			Map<String, List<MessageInfo>> messageInfoMap = new LinkedHashMap<>();
 			for (MessageInfo messageInfo : messageInfos) {
@@ -403,6 +407,14 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					//		System.out.println("condition -> " + StringUtils.contains(messageInfo.getBody().toLowerCase(), msg));
 							if (StringUtils.contains(messageInfo.getBody().toLowerCase(), msg)) {
 								messageInfo.setValid(false);
+								try {
+									ContactEntity contact = contactRepo.findByMobileNumberAndCityAndCategory(messageInfo.getChatIdMobileNumber(), city, category);
+									contact.setValid(false);
+									contactRepo.saveAndFlush(contact);
+								} catch(Exception ex) {
+									System.out.println("Exception while saving contact for invalid number : " + ex);
+									ex.printStackTrace();
+								}
 							}
 					//		System.out.println("map -> " + messageInfo.isValid());
 						});
