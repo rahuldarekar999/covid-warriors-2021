@@ -17,7 +17,7 @@ public interface ContactRepository extends JpaRepository<ContactEntity, Long> {
 
 	ContactEntity findByMobileNumberAndCityAndCategory(String chatIdMobileNumber, String city, String category);
 
-	@Query(value="select distinct(c.city) as city from ContactEntity c")
+	@Query(value="select distinct(c.city) as city from ContactEntity c where c.city is not null order by city")
 	List<String> findAllDistinctCity();
 
 	List<ContactEntity> findByCityAndCategoryAndValid(String city, String category, boolean b);

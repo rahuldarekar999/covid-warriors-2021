@@ -1,6 +1,7 @@
 package com.covid.warriors.controller;
 
 
+import com.covid.warriors.service.CovidWarriorsService;
 import com.covid.warriors.service.OcrService;
 import com.covid.warriors.service.impl.CovidWarriorServiceImpl;
 
@@ -21,7 +22,7 @@ import java.util.*;
 public class DataUploadController {
 
     @Autowired
-    private CovidWarriorServiceImpl covidWarriorService;
+    private CovidWarriorsService covidWarriorService;
 
     @Autowired
     private OcrService ocrService;

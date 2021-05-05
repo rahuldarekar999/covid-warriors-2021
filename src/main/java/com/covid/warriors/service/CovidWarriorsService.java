@@ -29,4 +29,6 @@ public interface CovidWarriorsService {
 
 	String forwardMessage(List<ResponseMessage> messages);
 
+	String uploadContactData(String path);
+
 }
