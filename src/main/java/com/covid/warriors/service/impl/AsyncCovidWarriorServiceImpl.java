@@ -77,7 +77,7 @@ public class AsyncCovidWarriorServiceImpl {
 					messageStr = messageStr.replaceAll("!mob!", receivedFrom).replace("!city!", forwardObj.getCity()).replace("!cat!", forwardObj.getCategory()).replace("!msg!", message.getBody());
 					request.setBody(messageStr);
 					request.setPhone(Long.valueOf(forwardObj.getFrom()));
-					System.out.println("sub : " + request);
+				//	System.out.println("sub : " + request);
 					forwardMessageToNumber(request);	
 				}
 			});										
@@ -168,7 +168,8 @@ public class AsyncCovidWarriorServiceImpl {
 		}
 	}
 	
-	private void forwardMessageToNumber(MessageRequest request) {
+	@Async
+	public void forwardMessageToNumber(MessageRequest request) {
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));

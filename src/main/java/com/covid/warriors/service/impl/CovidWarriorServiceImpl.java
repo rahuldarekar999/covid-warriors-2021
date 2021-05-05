@@ -81,8 +81,14 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Value("${message.response}")
 	private String responseMessage;
 
-	@Value("${subscription.message}")
-	private String subscriptionMessage; 
+	@Value("${subscription.message1}")
+	private String subscriptionMessage1; 
+	
+	@Value("${subscription.message2}")
+	private String subscriptionMessage2; 
+	
+	@Value("${forward.before}")
+	private int forwardBefore;
 	
 //	@Value("#{'${valid.response.black.list}'.split(',')}")
 	@Value("#{'${valid.response.black.list}'.split(',')}")
@@ -190,32 +196,65 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		return "No Data for given City And Category";
 	}
 	@Override
+	@Async
 	public void saveDataForSentMessages(CustomMessage customMessage, List<String> validNumberList) {
 		try {
 			if(customMessage.getFrom() != null) {
-				SentMessageMetadataEntity entity = sentMetadataMessageRepo.findByFromAndCityAndCategory(customMessage.getFrom(), customMessage.getCity(), customMessage.getCategory());
+				String mobile = getPhoneNumber(customMessage.getFrom());
+				SentMessageMetadataEntity entity = sentMetadataMessageRepo.findByFromAndCityAndCategory(mobile, customMessage.getCity(), customMessage.getCategory());
+				boolean subscribeUser = true;
 				if(entity == null) {
 					entity = new SentMessageMetadataEntity();
+				}
+				if(entity.getSubscribed() != null && Boolean.compare(entity.getSubscribed().booleanValue(), customMessage.isSubscribed()) == 0) {
+					subscribeUser = false;
 				}
 				if(!customMessage.isSubscribed()) {
 					String to = String.join(",", validNumberList);
 					entity.setTo(to);
-				}
-				entity.setFrom(getPhoneNumber(customMessage.getFrom()));
-				entity.setCategory(customMessage.getCategory() != null ? customMessage.getCategory().toUpperCase():"");
-				entity.setCity(customMessage.getCity() != null ? customMessage.getCity().toUpperCase() : "'");
-				// entity.setSentOn(new Date());
-				entity.setIsForward(customMessage.isForward());
-				entity.setSubscribed(customMessage.isSubscribed());
-				entity = sentMetadataMessageRepo.saveAndFlush(entity);
-				if(entity != null) {
-					MessageRequest request = new MessageRequest();
-					String messageStr = subscriptionMessage;
-					messageStr = messageStr.replace("!city!", customMessage.getCity()).replace("!cat!", customMessage.getCategory());
-					request.setBody(messageStr);
-					request.setPhone(Long.valueOf(entity.getFrom()));
+					entity.setFrom(mobile);
+					entity.setCategory(customMessage.getCategory() != null ? customMessage.getCategory().toUpperCase():"");
+					entity.setCity(customMessage.getCity() != null ? customMessage.getCity().toUpperCase() : "'");
+					// entity.setSentOn(new Date());
+					entity.setIsForward(customMessage.isForward());
+					entity.setSubscribed(customMessage.isSubscribed());
+					entity = sentMetadataMessageRepo.saveAndFlush(entity);
+				} else if(subscribeUser){
+					entity.setFrom(mobile);
+					entity.setCategory(customMessage.getCategory() != null ? customMessage.getCategory().toUpperCase():"");
+					entity.setCity(customMessage.getCity() != null ? customMessage.getCity().toUpperCase() : "'");
+					// entity.setSentOn(new Date());
+					entity.setIsForward(customMessage.isForward());
+					entity.setSubscribed(customMessage.isSubscribed());
+					entity = sentMetadataMessageRepo.saveAndFlush(entity);
+					if(entity != null) {
+						MessageRequest request1 = new MessageRequest();
+						String messageStr = subscriptionMessage1;
+						messageStr = messageStr.replace("!city!", customMessage.getCity()).replace("!cat!", customMessage.getCategory());
+						request1.setBody(messageStr);
+						request1.setPhone(Long.valueOf(entity.getFrom()));
+						
+						forwardMessageToNumber(request1);
+						MessageRequest request2 = new MessageRequest();
+						messageStr = subscriptionMessage2;
+						request2.setBody(messageStr);
+						request2.setPhone(Long.valueOf(entity.getFrom()));
+						forwardMessageToNumber(request2);
+						
+						List<MessageInfo> messages = getResponses(customMessage.getCity(), customMessage.getCategory(), forwardBefore);
+						System.out.println("message count " + messages.size());
+						getPositiveMessages(messages, customMessage.getCity(), customMessage.getCategory(), false);
+						for(MessageInfo msg : messages){
+							MessageRequest request = new MessageRequest();
+							messageStr = responseMessage;
+							String receivedFrom = msg.getChatId() != null ? msg.getChatId().substring(0, msg.getChatId().indexOf("@")) : null;
+							messageStr = messageStr.replaceAll("!mob!", receivedFrom).replace("!city!", customMessage.getCity()).replace("!cat!", customMessage.getCategory()).replace("!msg!", msg.getBody());
+							request.setBody(messageStr);
+							request.setPhone(Long.valueOf(entity.getFrom()));
+							asyncCovidWarriorServiceImpl.forwardMessageToNumber(request);
+						}
+					}
 					
-					forwardMessageToNumber(request);
 				}
 			}
 		} catch (Exception ex) {
@@ -225,7 +264,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	}
 
 	@Override
-	public List<MessageInfo> getResponses(String city, String category) {
+	public List<MessageInfo> getResponses(String city, String category, int daysToMinus) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		List<MessageInfo> messages = new ArrayList<MessageInfo>();
@@ -235,7 +274,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 			//String url = apiUrl + instanceId + "/messagesHistory?token=" + token + "&page=" + pageCount;
 			long maxTime = (Double.valueOf((Math.floor(new Date().getTime() / 1000)))).longValue();
 			
-			long minTime = getMinTime();
+			long minTime = getMinTime(daysToMinus);
 			String url = apiUrl + instanceId + "/messages?limit=0&token=" + token + "&min_time=" + minTime + "&max_time=" + maxTime;
 			System.out.println("URL : " + url);
 			String response = restTemplate.exchange(url, HttpMethod.GET, null, String.class).getBody();
@@ -257,9 +296,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	}
 
 	@Override
-	public long getMinTime() {
+	public long getMinTime(int daysToMinus) {
 		Calendar cal = Calendar.getInstance();
-		cal.add(Calendar.DATE, -daysBefore);
+		cal.add(Calendar.DATE, -daysToMinus);
 		cal.set(Calendar.HOUR_OF_DAY, 0);
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
@@ -360,11 +399,11 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		System.out.println(currTime);
 		
 		Calendar cal = Calendar.getInstance();
-		cal.add(Calendar.DATE, -3);
-		cal.set(Calendar.HOUR_OF_DAY, 0);
-		cal.set(Calendar.MINUTE, 0);
-		cal.set(Calendar.SECOND, 0);
-		cal.set(Calendar.MILLISECOND, 0);
+		cal.add(Calendar.HOUR, -6);
+//		cal.set(Calendar.HOUR_OF_DAY, 0);
+//		cal.set(Calendar.MINUTE, 0);0
+//		cal.set(Calendar.SECOND, 0);
+//		cal.set(Calendar.MILLISECOND, 0);
 		long prevTime = (Double.valueOf(Math.floor(cal.getTimeInMillis()/ 1000))).longValue();
 		System.out.println(prevTime);
 		
@@ -394,7 +433,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	}
 
 	@Override
-	public Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messageInfos, String city, String category) {
+	public Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messageInfos, String city, String category, boolean updateContact) {
 		if (Objects.nonNull(messageInfos) && !messageInfos.isEmpty()) {
 			Map<String, List<MessageInfo>> messageInfoMap = new LinkedHashMap<>();
 			for (MessageInfo messageInfo : messageInfos) {
@@ -407,23 +446,25 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					//		System.out.println("condition -> " + StringUtils.contains(messageInfo.getBody().toLowerCase(), msg));
 							if (StringUtils.contains(messageInfo.getBody().toLowerCase(), msg)) {
 								messageInfo.setValid(false);
-								try {
-									ContactEntity contact = contactRepo.findByMobileNumberAndCityAndCategory(messageInfo.getChatIdMobileNumber(), city, category);
-									contact.setValid(false);
-									contactRepo.saveAndFlush(contact);
-								} catch(Exception ex) {
-									System.out.println("Exception while saving contact for invalid number : " + ex);
-									ex.printStackTrace();
+								if(updateContact) {
+									try {
+										ContactEntity contact = contactRepo.findByMobileNumberAndCityAndCategory(messageInfo.getChatIdMobileNumber(), city, category);
+										contact.setValid(false);
+										contactRepo.saveAndFlush(contact);
+									} catch(Exception ex) {
+										System.out.println("Exception while saving contact for invalid number : " + ex);
+										ex.printStackTrace();
+									}
 								}
 							}
 					//		System.out.println("map -> " + messageInfo.isValid());
 						});
-					//	if(messageInfo.isValid()) {
+						if(updateContact) {
 							List<MessageInfo> messageInfoList = messageInfoMap
 									.getOrDefault(messageInfo.getChatIdMobileNumber(), new ArrayList<>());
 							messageInfoList.add(messageInfo);
 							messageInfoMap.putIfAbsent(messageInfo.getChatIdMobileNumber(), messageInfoList);
-					//	}
+						}
 					//}
 				}
 			}

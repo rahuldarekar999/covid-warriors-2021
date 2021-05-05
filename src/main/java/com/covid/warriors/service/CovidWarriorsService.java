@@ -11,9 +11,9 @@ public interface CovidWarriorsService {
 
 	String sendMessage(String city, String category);
 
-	List<MessageInfo> getResponses(String city, String category);
+	List<MessageInfo> getResponses(String city, String category, int daysToMinus);
 
-	Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messages, String city, String category);
+	Map<String, List<MessageInfo>> getPositiveMessages(List<MessageInfo> messages, String city, String category, boolean updateContact);
 
 	String sendMessageCustom(CustomMessage customMessage);
 
@@ -21,7 +21,7 @@ public interface CovidWarriorsService {
 
 	List<String> getCategoryList();
 
-	long getMinTime();
+	long getMinTime(int daysToMinus);
 
 	String getMessageForCategory(String category);
 

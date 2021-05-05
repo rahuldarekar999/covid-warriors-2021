@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,9 @@ public class MessageSenderController {
 	
 	@Autowired
 	private CovidWarriorsService covidWarriorsService;
+	
+	@Value("${days.before}")
+	private int daysBefore;
 	
 	@RequestMapping("/ping")  
 	public String ping()   
@@ -87,8 +91,8 @@ public class MessageSenderController {
 			@RequestParam("category") String category) throws JsonProcessingException   
 	{  
 		
-		List<MessageInfo> messages = covidWarriorsService.getResponses(city, category);
-		return ResponseEntity.ok().body(covidWarriorsService.getPositiveMessages(messages, city, category));
+		List<MessageInfo> messages = covidWarriorsService.getResponses(city, category, daysBefore);
+		return ResponseEntity.ok().body(covidWarriorsService.getPositiveMessages(messages, city, category, true));
 	}
 	
 	@RequestMapping("/getCity")  
@@ -115,7 +119,7 @@ public class MessageSenderController {
 	public ResponseEntity<?> getMinTime() 
 	{  	
 		Map<String, Long> responseMap = new HashMap<>();
-		responseMap.put("data", covidWarriorsService.getMinTime());
+		responseMap.put("data", covidWarriorsService.getMinTime(daysBefore));
 		return ResponseEntity.ok().body(responseMap);
 	}
 	
