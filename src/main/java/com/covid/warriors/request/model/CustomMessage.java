@@ -2,6 +2,9 @@ package com.covid.warriors.request.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomMessage {
     private String city;
     private String category;
@@ -10,8 +13,8 @@ public class CustomMessage {
     private String from;
     private Object obj;
     private boolean isForward;
-    
     private boolean isSubscribed;
+    private String subCat;
     
     public String getCity() {
         return city;
@@ -75,7 +78,13 @@ public class CustomMessage {
 
 	public void setSubscribed(boolean isSubscribed) {
 		this.isSubscribed = isSubscribed;
+	}
+
+	public String getSubCat() {
+		return subCat;
+	}
+
+	public void setSubCat(String subCat) {
+		this.subCat = subCat;
 	}  
-	
-	
 }

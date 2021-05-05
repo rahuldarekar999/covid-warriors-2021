@@ -9,9 +9,11 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -90,9 +92,19 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Value("${forward.before}")
 	private int forwardBefore;
 	
+	@Value("${forward.message.limit}")
+	private int forwardMsgLimit;
+	
+	@Value("${send.help.message}")
+	private String helpMessageText;
+	
 //	@Value("#{'${valid.response.black.list}'.split(',')}")
 	@Value("#{'${valid.response.black.list}'.split(',')}")
 	private List<String> blackListOfResponses;
+
+	
+	@Value("#{'${valid.response.black.list.forward}'.split(',')}")
+	private List<String> blackListOfForwardResponses;
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -185,7 +197,11 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Async
 	public String sendMessageCustom(CustomMessage customMessage) {
 		if (!CollectionUtils.isEmpty(customMessage.getMobileList())) {
+			Set<String> distinctNumbers = new LinkedHashSet<String>();  
 			customMessage.getMobileList().forEach(contact -> {
+				distinctNumbers.add(getPhoneNumber(contact));
+			});			
+			distinctNumbers.forEach(contact -> {
 				asyncCovidWarriorServiceImpl.sendAsyncMessage(contact, customMessage.getCity(), customMessage.getCategory(), customMessage.getMessage());
 			});
 			if(StringUtils.isNotBlank(customMessage.getFrom())) {
@@ -230,7 +246,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					if(entity != null) {
 						MessageRequest request1 = new MessageRequest();
 						String messageStr = subscriptionMessage1;
-						messageStr = messageStr.replace("!city!", customMessage.getCity()).replace("!cat!", customMessage.getCategory());
+						messageStr = messageStr.replace("!city!", entity.getCity()).replace("!cat!", entity.getCategory());
 						request1.setBody(messageStr);
 						request1.setPhone(Long.valueOf(entity.getFrom()));
 						
@@ -241,18 +257,25 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						request2.setPhone(Long.valueOf(entity.getFrom()));
 						forwardMessageToNumber(request2);
 						
-						List<MessageInfo> messages = getResponses(customMessage.getCity(), customMessage.getCategory(), forwardBefore);
+						List<MessageInfo> messages = getResponses(entity.getCity(), entity.getCategory(), forwardBefore);
 						System.out.println("message count " + messages.size());
 						getPositiveMessages(messages, customMessage.getCity(), customMessage.getCategory(), false);
+						int msgCounter = 0;
 						for(MessageInfo msg : messages){
-							MessageRequest request = new MessageRequest();
-							messageStr = responseMessage;
-							String receivedFrom = msg.getChatId() != null ? msg.getChatId().substring(0, msg.getChatId().indexOf("@")) : null;
-							messageStr = messageStr.replaceAll("!mob!", receivedFrom).replace("!city!", customMessage.getCity()).replace("!cat!", customMessage.getCategory()).replace("!msg!", msg.getBody());
-							request.setBody(messageStr);
-							request.setPhone(Long.valueOf(entity.getFrom()));
-							asyncCovidWarriorServiceImpl.forwardMessageToNumber(request);
+							if(msgCounter < forwardMsgLimit) {
+								MessageRequest request = new MessageRequest();
+								messageStr = responseMessage;
+								String receivedFrom = msg.getChatId() != null ? msg.getChatId().substring(0, msg.getChatId().indexOf("@")) : null;
+								messageStr = messageStr.replaceAll("!mob!", receivedFrom).replace("!city!", entity.getCity()).replace("!cat!", entity.getCategory()).replace("!msg!", msg.getBody());
+								request.setBody(messageStr);
+								request.setPhone(Long.valueOf(entity.getFrom()));
+								asyncCovidWarriorServiceImpl.forwardMessageToNumber(request);
+								msgCounter++;
+							}
 						}
+						String customMessageForHelp = prepareMessage(entity.getCity(), entity.getCategory(), entity.getFrom(), customMessage.getSubCat());
+						List<ContactEntity> entiryList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), entity.getCategory(), true);
+						asyncCovidWarriorServiceImpl.sendMessageToAll(entiryList, customMessageForHelp);
 					}
 					
 				}
@@ -261,6 +284,11 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 			ex.printStackTrace();
 			System.out.println("Exception while saving data " + ex);
 		}
+	}
+
+	private String prepareMessage(String city, String category, String from, String subCatText) {
+		String messageStr = helpMessageText;
+		return messageStr.replaceAll("!mob!", from).replace("!cat!", subCatText);
 	}
 
 	@Override

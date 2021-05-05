@@ -92,10 +92,27 @@ public class AsyncCovidWarriorServiceImpl {
 	}
 	
 	@Async
+	public void sendMessageToAll(List<ContactEntity> entityList, String message) {
+		try {
+			if(!CollectionUtils.isEmpty(entityList)) {
+				entityList.forEach(entity -> {
+					MessageRequest request = new MessageRequest();
+					request.setBody(message);
+					request.setPhone(Long.valueOf(entity.getMobileNumber()));
+				//	System.out.println("sub : " + request);
+					forwardMessageToNumber(request);	
+				});										
+			}
+		} catch(Exception ex) {
+			System.out.println("Exception while saving subscribed user object : " + ex);
+			ex.printStackTrace();
+		}
+	}
+	
+	@Async
 	public void sendAsyncMessage(String contact, String city, String category, String message) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-		contact = getPhoneNumber(contact);
 		boolean resend = true;
 		boolean isNew = false;
 		if(contact.length() == 12) {
