@@ -212,6 +212,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		}
 		return "No Data for given City And Category";
 	}
+	
 	@Override
 	@Async
 	public void saveDataForSentMessages(CustomMessage customMessage, List<String> validNumberList) {
@@ -225,6 +226,19 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				}
 				if(entity.getSubscribed() != null && Boolean.compare(entity.getSubscribed().booleanValue(), customMessage.isSubscribed()) == 0) {
 					subscribeUser = false;
+					String customMessageForHelp = prepareMessage(entity.getCity(), entity.getCategory(), entity.getFrom(), customMessage.getSubCat());
+					List<ContactEntity> entiryList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), entity.getCategory(), true);
+					List<ContactEntity> masterList = new ArrayList<>();
+					if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
+						List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
+						if(!CollectionUtils.isEmpty(hospitalList)) {
+							masterList.addAll(hospitalList);
+						}
+					}
+					if(!CollectionUtils.isEmpty(entiryList)) {
+						masterList.addAll(entiryList);
+					}
+					asyncCovidWarriorServiceImpl.sendMessageToAll(masterList, customMessageForHelp);
 				}
 				if(!customMessage.isSubscribed()) {
 					String to = String.join(",", validNumberList);
@@ -276,7 +290,17 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						}
 						String customMessageForHelp = prepareMessage(entity.getCity(), entity.getCategory(), entity.getFrom(), customMessage.getSubCat());
 						List<ContactEntity> entiryList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), entity.getCategory(), true);
-						asyncCovidWarriorServiceImpl.sendMessageToAll(entiryList, customMessageForHelp);
+						List<ContactEntity> masterList = new ArrayList<>();
+						if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
+							List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
+							if(!CollectionUtils.isEmpty(hospitalList)) {
+								masterList.addAll(hospitalList);
+							}
+						}
+						if(!CollectionUtils.isEmpty(entiryList)) {
+							masterList.addAll(entiryList);
+						}
+						asyncCovidWarriorServiceImpl.sendMessageToAll(masterList, customMessageForHelp);
 					}
 					
 				}
@@ -365,7 +389,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		if (!CollectionUtils.isEmpty(validResponses)) {
 			validResponses.forEach(response -> {
 				try {
-					System.out.println("Contact checking : " + response.getChatIdMobileNumber());
+				//	System.out.println("Contact checking : " + response.getChatIdMobileNumber());
 					ContactEntity contact = contactRepo
 							.findByMobileNumberAndCityAndCategoryAndValid(response.getChatIdMobileNumber(), city, category, true);
 					Date responseTime = new Date(response.getTime());
