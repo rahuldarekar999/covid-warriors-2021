@@ -202,7 +202,8 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				distinctNumbers.add(getPhoneNumber(contact));
 			});			
 			distinctNumbers.forEach(contact -> {
-				asyncCovidWarriorServiceImpl.sendAsyncMessage(contact, customMessage.getCity(), customMessage.getCategory(), customMessage.getMessage());
+				String message = prepareMessage(customMessage.getCity(), customMessage.getCategory(), customMessage.getFrom(), customMessage.getMessage());
+				asyncCovidWarriorServiceImpl.sendAsyncMessage(contact, customMessage.getCity(), customMessage.getCategory(), message);
 			});
 			if(StringUtils.isNotBlank(customMessage.getFrom())) {
 				saveDataForSentMessages(customMessage, customMessage.getMobileList());
@@ -687,5 +688,10 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 			contact = "91" + contact;
 		}
 		return contact;
+	}
+
+	@Override
+	public int getCountOfValidNumberByCityAndCategory(String city, String category) {
+		return contactRepo.countByCityAndCategoryAndValid(city, category, true);
 	}
 }

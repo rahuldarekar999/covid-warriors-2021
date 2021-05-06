@@ -137,4 +137,12 @@ public class MessageSenderController {
 		covidWarriorsService.saveDataForSentMessages(customMessage, customMessage.getMobileList());
 	    return ResponseEntity.ok().body("Saved");
 	}
+	
+	@RequestMapping(value="/count") 
+	public ResponseEntity<?> getCount(@RequestParam String city, @RequestParam String category) 
+	{  	
+		Map<String, Integer> responseMap = new HashMap<>();
+		responseMap.put("data", covidWarriorsService.getCountOfValidNumberByCityAndCategory(city, category));
+	    return ResponseEntity.ok().body(responseMap);
+	}
 }

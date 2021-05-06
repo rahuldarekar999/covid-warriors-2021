@@ -29,4 +29,6 @@ public interface ContactRepository extends JpaRepository<ContactEntity, Long> {
 	ContactEntity findByMobileNumberAndCityAndCategoryAndValid(String chatIdMobileNumber, String city, String category,
 			boolean valid);
 
+	int countByCityAndCategoryAndValid(String city, String category, boolean b);
+
 }

@@ -31,4 +31,6 @@ public interface CovidWarriorsService {
 
 	String uploadContactData(String path);
 
+	int getCountOfValidNumberByCityAndCategory(String city, String category);
+
 }
