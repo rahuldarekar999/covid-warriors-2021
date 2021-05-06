@@ -33,11 +33,13 @@ public class DataUploadController {
     }
 
     @RequestMapping(value = "/vision/text/upload", method = RequestMethod.PUT)
-    public Set<String> uploadImageForTextExtraction(@RequestParam("file") MultipartFile file) throws InterruptedException {
+    public Set<String> uploadImageForTextExtraction(@RequestParam("file") List<MultipartFile> files)  {
         Set<String> phoneNumbers = new HashSet<>();
-        if(!file.isEmpty()) {
-            String location = ocrService.uploadImaageForProcessing(file);
-            phoneNumbers = ocrService.getOcrParsedContents(location);
+        if(Objects.nonNull(files) && !files.isEmpty()) {
+            files.forEach(file -> {
+                String location = ocrService.uploadImaageForProcessing(file);
+                phoneNumbers.addAll(ocrService.getOcrParsedContents(location));
+            });
         }
         return phoneNumbers;
     }
