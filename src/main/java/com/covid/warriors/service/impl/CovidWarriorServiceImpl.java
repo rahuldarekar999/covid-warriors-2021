@@ -202,7 +202,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				distinctNumbers.add(getPhoneNumber(contact));
 			});			
 			distinctNumbers.forEach(contact -> {
-				String message = prepareMessage(customMessage.getCity(), customMessage.getCategory(), customMessage.getFrom(), customMessage.getSubCat());
+				String message = prepareMessage(customMessage.getCity(), customMessage.getCategory(), getPhoneNumber(customMessage.getFrom()), customMessage.getSubCat());
 				asyncCovidWarriorServiceImpl.sendAsyncMessage(contact, customMessage.getCity(), customMessage.getCategory(), message);
 			});
 			if(StringUtils.isNotBlank(customMessage.getFrom())) {
@@ -667,7 +667,8 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	}
 	
 	private String getPhoneNumber(String contact) {
-		contact.replaceAll("[()\\s-]+", "");
+		contact = contact.replaceAll("[()\\s-]+", "");
+		contact = contact.trim().replaceAll(" ", "");
 		if (contact.contains("+")) {
 			contact = contact.replace("+", "");
 		}
