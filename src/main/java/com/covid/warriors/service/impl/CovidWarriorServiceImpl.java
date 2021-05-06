@@ -202,7 +202,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				distinctNumbers.add(getPhoneNumber(contact));
 			});			
 			distinctNumbers.forEach(contact -> {
-				String message = prepareMessage(customMessage.getCity(), customMessage.getCategory(), customMessage.getFrom(), customMessage.getMessage());
+				String message = prepareMessage(customMessage.getCity(), customMessage.getCategory(), customMessage.getFrom(), customMessage.getCategory());
 				asyncCovidWarriorServiceImpl.sendAsyncMessage(contact, customMessage.getCity(), customMessage.getCategory(), message);
 			});
 			if(StringUtils.isNotBlank(customMessage.getFrom())) {
