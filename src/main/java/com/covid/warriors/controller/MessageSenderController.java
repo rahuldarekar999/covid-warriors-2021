@@ -146,7 +146,9 @@ public class MessageSenderController {
 	public ResponseEntity<?> getCount(@RequestParam String city, @RequestParam String category) 
 	{  	
 		Map<String, Integer> responseMap = new HashMap<>();
-		responseMap.put("data", covidWarriorsService.getCountOfValidNumberByCityAndCategory(city, category));
+		int dbCount = covidWarriorsService.getCountOfValidNumberByCityAndCategory(city, category);
+		int count = dbCount > 250 ? 250 : dbCount;
+		responseMap.put("data", count);
 	    return ResponseEntity.ok().body(responseMap);
 	}
 }
