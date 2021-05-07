@@ -18,6 +18,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.covid.warriors.entity.model.CityEntity;
+import com.covid.warriors.repository.CityRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -123,6 +125,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	
 	@Autowired
 	private AsyncCovidWarriorServiceImpl asyncCovidWarriorServiceImpl;
+
+	@Autowired
+	private CityRepository cityRepository;
 	
 	@Override
 	public String sendMessage(String city, String category) {
@@ -544,7 +549,8 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 
 	@Override
 	public List<String> getCityList() {
-		List<String> cityList = contactRepo.findAllDistinctCity();
+		List<String> cityList = cityRepository.findAll().stream().map(CityEntity::getCity)
+		.collect(Collectors.toList());
 		return cityList;
 	}
 
