@@ -585,17 +585,26 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						contactEntity.setPinCode(row[2]);
 						contactEntity.setCity(StringUtils.isEmpty(row[3]) ? "" : row[3].toUpperCase());
 						contactEntity.setState(StringUtils.isEmpty(row[4]) ? "" : row[4].toUpperCase());
+						contactEntity.setValid(Boolean.TRUE);
 						contactEntities.add(contactEntity);
-						if(contactEntities.size() == 1000) {
-							contactRepo.saveAll(contactEntities);
-							contactEntities.clear();
+						if(contactEntities.size() == 10) {
+							try {
+								contactRepo.saveAll(contactEntities);
+								contactEntities.clear();
+							} catch (Exception e) {
+								contactEntities.clear();
+							}
+
 						}
 					}
 
 				}
 			});
 			if(contactEntities.size() > 0)
-				contactRepo.saveAll(contactEntities);
+				try {
+					contactRepo.saveAll(contactEntities);
+				} catch (Exception e) { }
+
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

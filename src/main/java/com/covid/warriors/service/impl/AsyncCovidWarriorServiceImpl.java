@@ -140,10 +140,10 @@ public class AsyncCovidWarriorServiceImpl {
 					long lastReceivedDiff = diff / (60 * 1000);
 					if (lastReceivedDiff < resendWaitMin)
 						resend = false;
-				} /*else if (contactEntity.getLastMessageReceivedTime() == null && contactEntity.getMessageSentCount() != null
+				} else if (contactEntity.getLastMessageReceivedTime() == null && contactEntity.getMessageSentCount() != null
 						&& contactEntity.getMessageSentCount() >= stopMessageSentCount) {
 					resend = false;
-				}*/
+				}
 				if (resend) {
 					MessageRequest request = new MessageRequest();
 					request.setBody(message);
