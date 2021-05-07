@@ -1,12 +1,11 @@
 package com.covid.warriors.controller;
 
 
-import com.covid.warriors.service.CovidWarriorsService;
-import com.covid.warriors.service.OcrService;
-import com.covid.warriors.service.impl.CovidWarriorServiceImpl;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
-import com.google.i18n.phonenumbers.PhoneNumberMatch;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,7 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import com.covid.warriors.service.CovidWarriorsService;
+import com.covid.warriors.service.OcrService;
 
 @RestController
 @CrossOrigin

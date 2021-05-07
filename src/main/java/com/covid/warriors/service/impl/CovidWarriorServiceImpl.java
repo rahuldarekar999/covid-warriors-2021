@@ -133,7 +133,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	public String sendMessage(String city, String category) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-		List<ContactEntity> contacts = contactRepo.findByCityAndCategoryAndValid(city, category, true);
+		List<ContactEntity> contacts = contactRepo.findTop250ByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(city, category, true);
 		if (!CollectionUtils.isEmpty(contacts)) {
 			contacts.parallelStream().forEach(contact -> {
 				boolean resend = true;
@@ -232,14 +232,14 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				if(entity.getSubscribed() != null && Boolean.compare(entity.getSubscribed().booleanValue(), customMessage.isSubscribed()) == 0) {
 					subscribeUser = false;
 					String customMessageForHelp = prepareMessage(entity.getCity(), entity.getCategory(), entity.getFrom(), customMessage.getSubCat());
-					List<ContactEntity> entiryList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), entity.getCategory(), true);
+					List<ContactEntity> entiryList = contactRepo.findTop250ByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(entity.getCity(), entity.getCategory(), true);
 					List<ContactEntity> masterList = new ArrayList<>();
-					if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
+					/*if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
 						List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
 						if(!CollectionUtils.isEmpty(hospitalList)) {
 							masterList.addAll(hospitalList);
 						}
-					}
+					}*/
 					if(!CollectionUtils.isEmpty(entiryList)) {
 						masterList.addAll(entiryList);
 					}
@@ -294,14 +294,14 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 							}
 						}
 						String customMessageForHelp = prepareMessage(entity.getCity(), entity.getCategory(), entity.getFrom(), customMessage.getSubCat());
-						List<ContactEntity> entiryList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), entity.getCategory(), true);
+						List<ContactEntity> entiryList = contactRepo.findTop250ByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(entity.getCity(), entity.getCategory(), true);
 						List<ContactEntity> masterList = new ArrayList<>();
-						if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
+						/*if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
 							List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
 							if(!CollectionUtils.isEmpty(hospitalList)) {
 								masterList.addAll(hospitalList);
 							}
-						}
+						}*/
 						if(!CollectionUtils.isEmpty(entiryList)) {
 							masterList.addAll(entiryList);
 						}

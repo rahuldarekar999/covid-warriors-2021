@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.covid.warriors.repository.ContactRepository;
 import com.covid.warriors.request.model.CustomMessage;
 import com.covid.warriors.request.model.WebhookMessageResponse;
 import com.covid.warriors.response.model.MessageInfo;
@@ -34,6 +35,9 @@ public class MessageSenderController {
 	@Value("${days.before}")
 	private int daysBefore;
 	
+	@Autowired
+	private ContactRepository contactRepo;
+	
 	@RequestMapping("/ping")  
 	public String ping()   
 	{  
@@ -41,11 +45,11 @@ public class MessageSenderController {
 	}  
 	
 	//below endpoint is for testing purpose only
-	@RequestMapping(value="/test", method = RequestMethod.POST) 
-	public ResponseEntity<?> saveFrom(@RequestBody CustomMessage customMessage) throws JsonProcessingException   
+	@RequestMapping(value="/test") 
+	public ResponseEntity<?> saveFrom(@RequestParam("city") String city, 
+			@RequestParam("category") String category) throws JsonProcessingException   
 	{  
-		covidWarriorsService.saveDataForSentMessages(customMessage, customMessage.getMobileList());
-	    return ResponseEntity.ok().body("Saved");
+		return ResponseEntity.ok().body(contactRepo.findTop250ByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(city, category, true).size());
 	}
 	
 	@RequestMapping(value = "/checkObj", method = RequestMethod.POST)
