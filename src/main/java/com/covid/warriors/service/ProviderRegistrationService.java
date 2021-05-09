@@ -22,6 +22,7 @@ public class ProviderRegistrationService {
                 contactEntity.setMobileNumber(contact);
                 contactEntity.setCity(providerRequest.getCity().toUpperCase());
                 contactEntity.setCategory(providerRequest.getCategory().toUpperCase());
+                contactEntity.setValid(true);
                 contactEntity.setSource("WEBSITE");
                 contactRepository.save(contactEntity);
                 return Boolean.TRUE;

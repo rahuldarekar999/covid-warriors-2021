@@ -386,7 +386,8 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		messages.sort((MessageInfo m11, MessageInfo m12)->Long.compare(m12.getTime(), m11.getTime())); 
 	
 		List<ContactEntity> contacts = contactRepo.findByCityAndCategory(city, category);
-		List<String> validNumbers = contacts.stream().map(ContactEntity::getMobileNumber).collect(Collectors.toList());
+		List<String> validNumbers = contacts.stream().filter(c -> (city.equalsIgnoreCase(c.getCity()) 
+				&& category.equalsIgnoreCase(c.getCategory()))).map(ContactEntity::getMobileNumber).collect(Collectors.toList());
 
 		List<MessageInfo> validResponses = messages.stream()
 				.filter(m -> (validNumbers.contains(m.getChatIdMobileNumber()) && !m.isFromMe()))
