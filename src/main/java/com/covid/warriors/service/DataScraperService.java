@@ -58,7 +58,7 @@ public class DataScraperService {
             HttpEntity entity = response.getEntity();
             String result = EntityUtils.toString(entity);
             
-            System.out.println("---------------------- \n " + result + "\n------------------");
+        //    System.out.println("---------------------- \n " + result + "\n------------------");
             Iterator<PhoneNumberMatch> existsPhone= PhoneNumberUtil.getInstance().findNumbers(result,
                     "IN").iterator();
             Set<String> phoneNumbers = new HashSet<>();
