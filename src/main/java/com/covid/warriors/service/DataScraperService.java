@@ -18,6 +18,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.util.UriEncoder;
 
 import com.covid.warriors.utils.ContactUtil;
 import com.google.i18n.phonenumbers.PhoneNumberMatch;
@@ -50,7 +51,7 @@ public class DataScraperService {
             HttpClient httpclient = HttpClients.createDefault();
             String url = proxyCrawlApi + "?token=" + proxyCrawlToken + "&format=json&url=";
             System.out.println("Final URL -> " + url);
-            URIBuilder builder = new URIBuilder(url.concat(getTwitterUrlToScrap(city, category)));
+            URIBuilder builder = new URIBuilder(UriEncoder.encode(url.concat(getTwitterUrlToScrap(city, category))));
             URI uri = builder.build();
             HttpGet request = new HttpGet(uri);
             HttpResponse response = httpclient.execute(request);
