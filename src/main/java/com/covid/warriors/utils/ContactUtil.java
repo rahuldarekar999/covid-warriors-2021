@@ -26,4 +26,21 @@ public class ContactUtil {
         }
         return contact;
     }
+
+    public static String validateContact(String contact) {
+        contact = contact.replaceAll("[()\\s-]+", "");
+        contact = contact.replace("+", "");
+        Pattern p1 = Pattern.compile("(91)?[6-9][0-9]{9}");
+        Pattern p2 = Pattern.compile("(0)?[6-9][0-9]{9}");
+        Matcher m1 = p1.matcher(contact);
+        Matcher m2 = p2.matcher(contact);
+        boolean isPhoneWithNineOne = (m1.find() && m1.group().equals(contact));
+        boolean isPhoneWithZero = (m2.find() && m2.group().equals(contact));
+        if(isPhoneWithNineOne) {
+            return contact.substring(2);
+        } else if(isPhoneWithZero) {
+            return contact.substring(1);
+        }
+        return "";
+    }
 }
