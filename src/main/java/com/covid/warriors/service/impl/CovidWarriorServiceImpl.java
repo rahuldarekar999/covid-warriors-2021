@@ -258,7 +258,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					entity.setCity(customMessage.getCity() != null ? customMessage.getCity().toUpperCase() : "'");
 					// entity.setSentOn(new Date());
 					entity.setIsForward(customMessage.isForward());
-					entity.setSubscribed(customMessage.isSubscribed());
+					entity.setSubscribed(true);
 					entity = sentMetadataMessageRepo.saveAndFlush(entity);
 				} else if(subscribeUser){
 					entity.setFrom(mobile);
@@ -750,12 +750,11 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				if(customMessage.getFrom() != null) {
 					String mobile = getPhoneNumber(customMessage.getFrom());
 					SentMessageMetadataEntity entity = sentMetadataMessageRepo.findByFromAndCityAndCategory(mobile, customMessage.getCity(), customMessage.getCategory());
-					boolean subscribeUser = true;
 					if(entity == null) {
 						entity = new SentMessageMetadataEntity();
 					}
 					
-					if(!customMessage.isSubscribed()) {
+					//if(!customMessage.isSubscribed()) {
 						String to = String.join(",", customMessage.getMobileList());
 						entity.setTo(to);
 						entity.setFrom(mobile);
@@ -763,11 +762,11 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						entity.setCity(customMessage.getCity() != null ? customMessage.getCity().toUpperCase() : "'");
 						// entity.setSentOn(new Date());
 						entity.setIsForward(customMessage.isForward());
-						entity.setSubscribed(customMessage.isSubscribed());
+						entity.setSubscribed(true);
 						entity = sentMetadataMessageRepo.saveAndFlush(entity);
 						
 						sendMessageCustom(customMessage);
-					} 
+				//	} 
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
