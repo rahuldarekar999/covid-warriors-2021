@@ -37,6 +37,9 @@ public class ContactUtil {
         boolean isPhoneWithNineOne = (m1.find() && m1.group().equals(contact));
         boolean isPhoneWithZero = (m2.find() && m2.group().equals(contact));
         if(isPhoneWithNineOne) {
+        	if(contact.length() == 10) {
+        		return contact;
+        	}
             return contact.substring(2);
         } else if(isPhoneWithZero) {
             return contact.substring(1);

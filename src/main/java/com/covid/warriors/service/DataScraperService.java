@@ -51,12 +51,14 @@ public class DataScraperService {
             HttpClient httpclient = HttpClients.createDefault();
             String url = proxyCrawlApi + "?token=" + proxyCrawlToken + "&format=json&url=";
             System.out.println("Final URL -> " + url);
-            URIBuilder builder = new URIBuilder(UriEncoder.encode(url.concat(getTwitterUrlToScrap(city, category))));
+            URIBuilder builder = new URIBuilder(url.concat(UriEncoder.encode(getTwitterUrlToScrap(city, category))));
             URI uri = builder.build();
             HttpGet request = new HttpGet(uri);
             HttpResponse response = httpclient.execute(request);
             HttpEntity entity = response.getEntity();
             String result = EntityUtils.toString(entity);
+            
+            System.out.println("---------------------- \n " + result + "\n------------------");
             Iterator<PhoneNumberMatch> existsPhone= PhoneNumberUtil.getInstance().findNumbers(result,
                     "IN").iterator();
             Set<String> phoneNumbers = new HashSet<>();
