@@ -18,8 +18,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.covid.warriors.entity.model.CityEntity;
-import com.covid.warriors.repository.CityRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,9 +31,11 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import com.covid.warriors.entity.model.CategoryMessage;
+import com.covid.warriors.entity.model.CityEntity;
 import com.covid.warriors.entity.model.ContactEntity;
 import com.covid.warriors.entity.model.SentMessageMetadataEntity;
 import com.covid.warriors.repository.CategoryMessageRepository;
+import com.covid.warriors.repository.CityRepository;
 import com.covid.warriors.repository.ContactRepository;
 import com.covid.warriors.repository.SentMessageMetadataRepository;
 import com.covid.warriors.request.model.CustomMessage;
@@ -46,6 +46,7 @@ import com.covid.warriors.response.model.GetMessagesResponse;
 import com.covid.warriors.response.model.MessageInfo;
 import com.covid.warriors.response.model.SendMessageResponse;
 import com.covid.warriors.service.CovidWarriorsService;
+import com.covid.warriors.service.DataScraperService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReader;
@@ -128,6 +129,10 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 
 	@Autowired
 	private CityRepository cityRepository;
+	
+	
+	@Autowired
+	private DataScraperService dataScraperService;
 	
 	@Override
 	public String sendMessage(String city, String category) {
@@ -734,5 +739,40 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Override
 	public int getCountOfValidNumberByCityAndCategory(String city, String category) {
 		return contactRepo.countByCityAndCategoryAndValid(city, category, true);
+	}
+
+	@Override
+	public void saveDataForSentMessagesFromSocialMedia(CustomMessage customMessage) {
+		Set<String> contacts = dataScraperService.scrapeDataFromTwitterUrl(customMessage.getCity(), customMessage.getCategory());
+		if(!CollectionUtils.isEmpty(contacts)) {
+			customMessage.setMobileList(new ArrayList<String>(contacts));
+			try {
+				if(customMessage.getFrom() != null) {
+					String mobile = getPhoneNumber(customMessage.getFrom());
+					SentMessageMetadataEntity entity = sentMetadataMessageRepo.findByFromAndCityAndCategory(mobile, customMessage.getCity(), customMessage.getCategory());
+					boolean subscribeUser = true;
+					if(entity == null) {
+						entity = new SentMessageMetadataEntity();
+					}
+					
+					if(!customMessage.isSubscribed()) {
+						String to = String.join(",", customMessage.getMobileList());
+						entity.setTo(to);
+						entity.setFrom(mobile);
+						entity.setCategory(customMessage.getCategory() != null ? customMessage.getCategory().toUpperCase():"");
+						entity.setCity(customMessage.getCity() != null ? customMessage.getCity().toUpperCase() : "'");
+						// entity.setSentOn(new Date());
+						entity.setIsForward(customMessage.isForward());
+						entity.setSubscribed(customMessage.isSubscribed());
+						entity = sentMetadataMessageRepo.saveAndFlush(entity);
+						
+						sendMessageCustom(customMessage);
+					} 
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				System.out.println("Exception while saving data " + ex);
+			}
+		}
 	}
 }

@@ -33,4 +33,6 @@ public interface CovidWarriorsService {
 
 	int getCountOfValidNumberByCityAndCategory(String city, String category);
 
+	void saveDataForSentMessagesFromSocialMedia(CustomMessage customMessage);
+
 }
