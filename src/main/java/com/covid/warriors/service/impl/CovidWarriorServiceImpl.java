@@ -105,6 +105,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Value("${send.help.message}")
 	private String helpMessageText;
 	
+	@Value("${twitter.send.notification.message}")
+	private String twitterNotificationMessage;
+	
 //	@Value("#{'${valid.response.black.list}'.split(',')}")
 	@Value("#{'${valid.response.black.list}'.split(',')}")
 	private List<String> blackListOfResponses;
@@ -759,7 +762,17 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 		if(twitterFeatureOn && !CollectionUtils.isEmpty(customMessage.getMobileList())) {
 			try {
 				if(customMessage.getFrom() != null) {
+					
 					String mobile = getPhoneNumber(customMessage.getFrom());
+					
+					MessageRequest request1 = new MessageRequest();
+					String messageStr = twitterNotificationMessage;
+					messageStr = messageStr.replaceAll("!count!", customMessage.getMobileList().size() + "");
+					request1.setBody(messageStr);
+					request1.setPhone(Long.valueOf(mobile));
+					
+					forwardMessageToNumber(request1);
+					
 					SentMessageMetadataEntity entity = sentMetadataMessageRepo.findByFromAndCityAndCategory(mobile, customMessage.getCity(), customMessage.getCategory());
 					if(entity == null) {
 						entity = new SentMessageMetadataEntity();
@@ -777,6 +790,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						entity = sentMetadataMessageRepo.saveAndFlush(entity);
 						
 						sendMessageCustom(customMessage);
+						
+						
+						
 				//	} 
 				}
 			} catch (Exception ex) {
