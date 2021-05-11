@@ -743,7 +743,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 
 	@Override
 	public void saveDataForSentMessagesFromSocialMedia(CustomMessage customMessage) {
-		String searchText = StringUtils.isNotBlank(customMessage.getSubCat()) ? customMessage.getCategory() + " " + customMessage.getSubCat() : customMessage.getCategory();
+		String searchText = StringUtils.isNotBlank(customMessage.getSubCat()) ? customMessage.getCategory() + " OR " + customMessage.getSubCat() : customMessage.getCategory();
 		Set<String> contacts = dataScraperService.scrapeDataFromTwitterUrl(customMessage.getCity(), searchText);
 		if(!CollectionUtils.isEmpty(contacts)) {
 			customMessage.setMobileList(new ArrayList<String>(contacts));
