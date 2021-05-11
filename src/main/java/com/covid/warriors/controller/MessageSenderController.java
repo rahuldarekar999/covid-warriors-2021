@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.covid.warriors.repository.ContactRepository;
 import com.covid.warriors.request.model.CustomMessage;
+import com.covid.warriors.request.model.TwitterMetadataResponse;
 import com.covid.warriors.request.model.WebhookMessageResponse;
 import com.covid.warriors.response.model.MessageInfo;
 import com.covid.warriors.service.CovidWarriorsService;
@@ -159,5 +160,12 @@ public class MessageSenderController {
 		Map<String, Integer> responseMap = new HashMap<>();
 		responseMap.put("data", count);
 	    return ResponseEntity.ok().body(responseMap);
+	}
+	
+	@RequestMapping(value="/getTwitterData", method = RequestMethod.POST) 
+	public ResponseEntity<?> getTwitterData(@RequestBody CustomMessage customMessage) 
+	{  	
+		TwitterMetadataResponse twitterMetadata = covidWarriorsService.getTwitterData(customMessage);
+		return ResponseEntity.ok().body(twitterMetadata);
 	}
 }

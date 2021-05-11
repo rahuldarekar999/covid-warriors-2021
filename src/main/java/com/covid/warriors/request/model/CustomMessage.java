@@ -1,5 +1,6 @@
 package com.covid.warriors.request.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -41,6 +42,9 @@ public class CustomMessage {
     }
 
     public List<String> getMobileList() {
+    	if(mobileList == null) {
+    		mobileList = new ArrayList<String>();
+    	}
         return mobileList;
     }
 

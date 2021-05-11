@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.covid.warriors.request.model.CustomMessage;
 import com.covid.warriors.request.model.ResponseMessage;
+import com.covid.warriors.request.model.TwitterMetadataResponse;
 import com.covid.warriors.response.model.MessageInfo;
 
 public interface CovidWarriorsService {
@@ -34,5 +35,7 @@ public interface CovidWarriorsService {
 	int getCountOfValidNumberByCityAndCategory(String city, String category);
 
 	int saveDataForSentMessagesFromSocialMedia(CustomMessage customMessage);
+
+	TwitterMetadataResponse getTwitterData(CustomMessage customMessage);
 
 }

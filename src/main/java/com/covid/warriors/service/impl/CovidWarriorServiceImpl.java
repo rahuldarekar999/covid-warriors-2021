@@ -41,6 +41,7 @@ import com.covid.warriors.repository.SentMessageMetadataRepository;
 import com.covid.warriors.request.model.CustomMessage;
 import com.covid.warriors.request.model.MessageRequest;
 import com.covid.warriors.request.model.ResponseMessage;
+import com.covid.warriors.request.model.TwitterMetadataResponse;
 import com.covid.warriors.response.model.CheckPhoneResponse;
 import com.covid.warriors.response.model.GetMessagesResponse;
 import com.covid.warriors.response.model.MessageInfo;
@@ -746,10 +747,16 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 
 	@Override
 	public int saveDataForSentMessagesFromSocialMedia(CustomMessage customMessage) {
-		String searchText = StringUtils.isNotBlank(customMessage.getSubCat()) ? customMessage.getCategory() + " OR " + customMessage.getSubCat() : customMessage.getCategory();
-		Set<String> contacts = dataScraperService.scrapeDataFromTwitterUrl(customMessage.getCity(), searchText);
-		if(twitterFeatureOn && !CollectionUtils.isEmpty(contacts)) {
+		boolean useTwitterApi = true;
+		if(!CollectionUtils.isEmpty(customMessage.getMobileList())) {
+			useTwitterApi = false;
+		}
+		if(useTwitterApi) {	
+			String searchText = StringUtils.isNotBlank(customMessage.getSubCat()) ? customMessage.getCategory() + " OR " + customMessage.getSubCat() : customMessage.getCategory();
+			Set<String> contacts = dataScraperService.scrapeDataFromTwitterUrl(customMessage.getCity(), customMessage.getCategory(), searchText);
 			customMessage.setMobileList(new ArrayList<String>(contacts));
+		}
+		if(twitterFeatureOn && !CollectionUtils.isEmpty(customMessage.getMobileList())) {
 			try {
 				if(customMessage.getFrom() != null) {
 					String mobile = getPhoneNumber(customMessage.getFrom());
@@ -777,6 +784,13 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				System.out.println("Exception while saving data " + ex);
 			}
 		}
-		return contacts.size();
+		return customMessage.getMobileList().size();
+	}
+
+	@Override
+	public TwitterMetadataResponse getTwitterData(CustomMessage customMessage) {
+		String searchText = StringUtils.isNotBlank(customMessage.getSubCat()) ? customMessage.getCategory() + " OR " + customMessage.getSubCat() : customMessage.getCategory();
+		TwitterMetadataResponse twitterMetadataResponse = dataScraperService.scrapeDataFromTwitterUrlMetadata(customMessage.getCity(), customMessage.getCategory(), searchText);
+		return twitterMetadataResponse;
 	}
 }
