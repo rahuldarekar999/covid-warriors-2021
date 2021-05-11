@@ -83,6 +83,9 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Value("${forward.feature}")
 	private boolean forwardFeatureOn;
 	
+	@Value("${twitter.feature}")
+	private boolean twitterFeatureOn;
+		
 	@Value("${message.response}")
 	private String responseMessage;
 
@@ -742,10 +745,10 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	}
 
 	@Override
-	public void saveDataForSentMessagesFromSocialMedia(CustomMessage customMessage) {
+	public int saveDataForSentMessagesFromSocialMedia(CustomMessage customMessage) {
 		String searchText = StringUtils.isNotBlank(customMessage.getSubCat()) ? customMessage.getCategory() + " OR " + customMessage.getSubCat() : customMessage.getCategory();
 		Set<String> contacts = dataScraperService.scrapeDataFromTwitterUrl(customMessage.getCity(), searchText);
-		if(!CollectionUtils.isEmpty(contacts)) {
+		if(twitterFeatureOn && !CollectionUtils.isEmpty(contacts)) {
 			customMessage.setMobileList(new ArrayList<String>(contacts));
 			try {
 				if(customMessage.getFrom() != null) {
@@ -774,5 +777,6 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				System.out.println("Exception while saving data " + ex);
 			}
 		}
+		return contacts.size();
 	}
 }

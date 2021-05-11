@@ -155,7 +155,9 @@ public class MessageSenderController {
 	@RequestMapping(value="/sendFromSocialMedia", method = RequestMethod.POST) 
 	public ResponseEntity<?> sendFromSocialMedia(@RequestBody CustomMessage customMessage) 
 	{  	
-		covidWarriorsService.saveDataForSentMessagesFromSocialMedia(customMessage);
-	    return ResponseEntity.ok().body("Saved");
+		int count = covidWarriorsService.saveDataForSentMessagesFromSocialMedia(customMessage);
+		Map<String, Integer> responseMap = new HashMap<>();
+		responseMap.put("data", count);
+	    return ResponseEntity.ok().body(responseMap);
 	}
 }
