@@ -185,7 +185,7 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 				body = new MultipartBody.Builder().setType(MultipartBody.FORM)
 				  .addFormDataPart("csrf_test_name","5974ccf92f3c86662606e375f9ab9665")
 				  .addFormDataPart("Compose_smsForm[unicode]","0")
-				  .addFormDataPart("Compose_smsForm[unicode]","1")
+				  .addFormDataPart("Compose_smsForm[unicode]","0")
 				  .addFormDataPart("Compose_smsForm[flash]","0")
 				  .addFormDataPart("language","am")
 				  .addFormDataPart("Compose_smsForm[message]",msg)
@@ -236,10 +236,11 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 		if (!CollectionUtils.isEmpty(mobileList)) {
 			Set<String> distinctNumbers = new LinkedHashSet<String>();  
 			mobileList.forEach(contact -> {
+				String contantStr = getPhoneNumber(contact);
 				String msg = prepareSmsMessage(city, category, contact, subCat);
 				System.out.println("message length : " + msg.length());
 				try{
-					sendBulkSms(msg, contact);
+					sendBulkSms(msg, contantStr);
 				} catch (IOException e) {
 					System.out.println("Error while sending messages to  ; " + distinctNumbers);
 					e.printStackTrace();
