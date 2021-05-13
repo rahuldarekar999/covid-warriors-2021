@@ -1,5 +1,6 @@
 package com.covid.warriors.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +103,15 @@ public class MessageSenderController {
 	{  
 		
 		List<MessageInfo> messages = covidWarriorsService.getResponses(city, category, daysBefore);
-		return ResponseEntity.ok().body(covidWarriorsService.getPositiveMessages(messages, city, category, true));
+		Map<String, List<MessageInfo>> messageInfoMap = new HashMap<>();
+		for(MessageInfo messageInfo : messages) {
+			List<MessageInfo> messageInfoList = messageInfoMap
+					.getOrDefault(messageInfo.getChatIdMobileNumber(), new ArrayList<>());
+			messageInfoList.add(messageInfo);
+			messageInfoMap.putIfAbsent(messageInfo.getChatIdMobileNumber(), messageInfoList);
+		}
+		return ResponseEntity.ok(messageInfoMap);
+		//return ResponseEntity.ok().body(covidWarriorsService.getPositiveMessages(messages, city, category, true));
 	}
 	
 	@RequestMapping("/getCity")  

@@ -15,6 +15,7 @@ public class MessageInfo implements Comparable<MessageInfo> {
 	private long time;
 	
 	private boolean isValid=true;
+	private String chatIdMobileNumber;
 	
 	public String getId() {
 		return id;
@@ -53,9 +54,12 @@ public class MessageInfo implements Comparable<MessageInfo> {
 			return chatId.substring(0, chatId.indexOf("@"));
 			
 		}
-		return "";
+		return chatIdMobileNumber;
 	}
-	
+
+	public void setChatIdMobileNumber(String chatIdMobileNumber) {
+		this.chatIdMobileNumber = chatIdMobileNumber;
+	}
 
 	public boolean isFromMe() {
 		return fromMe;
