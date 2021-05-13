@@ -166,6 +166,7 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 				  .build();
 		Response response = client.newCall(request).execute();
 		if(response.isSuccessful()) {
+			response.close();
 			RequestBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
 			  .addFormDataPart("csrf_test_name","5974ccf92f3c86662606e375f9ab9665")
 			  .addFormDataPart("username","rajimahajan")
@@ -180,6 +181,7 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 			  .build();
 			response = client.newCall(request).execute();
 			if(response.isSuccessful()) {
+				response.close();
 				Headers headers = response.headers();
 				System.out.println("test : "  + headers);
 				body = new MultipartBody.Builder().setType(MultipartBody.FORM)
