@@ -1,10 +1,16 @@
 package com.covid.warriors.service;
 
+import java.io.IOException;
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.HttpCookie;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,6 +32,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.i18n.phonenumbers.PhoneNumberMatch;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
+
+import okhttp3.Headers;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 @Service
 public class DataScraperService {
@@ -136,4 +149,33 @@ public class DataScraperService {
     	System.out.println("twitter url -> " + url);
     	return url;
     }
+    
+    public Map<String, String> buildLoginCookieString() {
+
+		String csrf_cookie_name = null;
+		String ci_session = null;
+		CookieManager cookieManager = new CookieManager();
+		CookieHandler.setDefault(cookieManager);
+		List<HttpCookie> cookieList = cookieManager.getCookieStore().getCookies();
+		Map<String, String> cookieMap= new HashMap<>();
+		for (HttpCookie cookie : cookieList) {
+			String cookieName = cookie.getName();
+			String cookieValue = cookie.getValue();
+			if ("csrf_cookie_name".equals(cookieName)) {
+				cookieMap.put("csrf_cookie_name", cookieValue);
+				csrf_cookie_name = cookieName + "=" + cookieValue + "; ";
+			} else if ("ci_session".equals(cookieName)) {
+				cookieMap.put("ci_session", cookieValue);
+				ci_session = cookieName + "=" + cookieValue;
+			}
+		}
+
+		String cookie = csrf_cookie_name + ci_session;
+
+		return cookieMap;
+	}
+    public static void main(String[] args) throws IOException {
+    	
+	}
+
 }

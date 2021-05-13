@@ -33,5 +33,8 @@ public interface ContactRepository extends JpaRepository<ContactEntity, Long> {
 
 	//@Query(value="select c from ContactEntity c where c.city = :city and c.category = :category and c.valid = :b limit 250")
 	List<ContactEntity> findTop250ByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(String city, String category, boolean b);
+	
+	@Query(value="select c.mobileNumber as mobile from ContactEntity c where c.city = :city and c.category = :category and c.valid = :b")
+	List<String> findTop250MobileByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(String city, String category, boolean b);
 
 }

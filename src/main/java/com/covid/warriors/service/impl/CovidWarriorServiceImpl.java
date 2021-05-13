@@ -47,6 +47,7 @@ import com.covid.warriors.response.model.GetMessagesResponse;
 import com.covid.warriors.response.model.MessageInfo;
 import com.covid.warriors.response.model.SendMessageResponse;
 import com.covid.warriors.service.CovidWarriorsService;
+import com.covid.warriors.service.CovidWarriorsSmsService;
 import com.covid.warriors.service.DataScraperService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -107,6 +108,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	
 	@Value("${twitter.send.notification.message}")
 	private String twitterNotificationMessage;
+
 	
 //	@Value("#{'${valid.response.black.list}'.split(',')}")
 	@Value("#{'${valid.response.black.list}'.split(',')}")
@@ -137,10 +139,12 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Autowired
 	private CityRepository cityRepository;
 	
-	
 	@Autowired
 	private DataScraperService dataScraperService;
 	
+	@Autowired
+	private CovidWarriorsSmsService covidWarriorSmsServiceImpl;
+
 	@Override
 	public String sendMessage(String city, String category) {
 		HttpHeaders headers = new HttpHeaders();
@@ -327,6 +331,110 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 			System.out.println("Exception while saving data " + ex);
 		}
 	}
+
+	@Override
+	@Async
+	public void sendSms(CustomMessage customMessage, List<String> validNumberList) {
+		try {
+			if(customMessage.getFrom() != null) {
+				String mobile = getPhoneNumber(customMessage.getFrom());
+				SentMessageMetadataEntity entity = sentMetadataMessageRepo.findByFromAndCityAndCategory(mobile, customMessage.getCity(), customMessage.getCategory());
+				boolean subscribeUser = true;
+				if(entity == null) {
+					entity = new SentMessageMetadataEntity();
+				}
+				if(entity.getSubscribed() != null && Boolean.compare(entity.getSubscribed().booleanValue(), customMessage.isSubscribed()) == 0) {
+					subscribeUser = false;
+					List<String> entiryList = contactRepo.findTop250MobileByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(entity.getCity(), entity.getCategory(), true);
+					List<String> masterList = new ArrayList<>();
+					/*if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
+						List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
+						if(!CollectionUtils.isEmpty(hospitalList)) {
+							masterList.addAll(hospitalList);
+						}
+					}*/
+					if(!CollectionUtils.isEmpty(entiryList)) {
+						masterList.addAll(entiryList);
+					}
+					if(!CollectionUtils.isEmpty(masterList)) {
+						System.out.println("Sending messages to : " + masterList.size());
+						covidWarriorSmsServiceImpl.sendSms(masterList, entity.getCity(), entity.getCategory(), customMessage.getSubCat());
+					}
+				}
+				if(!customMessage.isSubscribed()) {
+					String to = String.join(",", validNumberList);
+					entity.setTo(to);
+					entity.setFrom(mobile);
+					entity.setCategory(customMessage.getCategory() != null ? customMessage.getCategory().toUpperCase():"");
+					entity.setCity(customMessage.getCity() != null ? customMessage.getCity().toUpperCase() : "'");
+					// entity.setSentOn(new Date());
+					entity.setIsForward(customMessage.isForward());
+					entity.setSubscribed(true);
+					entity = sentMetadataMessageRepo.saveAndFlush(entity);
+				} else if(subscribeUser){
+					entity.setFrom(mobile);
+					entity.setCategory(customMessage.getCategory() != null ? customMessage.getCategory().toUpperCase():"");
+					entity.setCity(customMessage.getCity() != null ? customMessage.getCity().toUpperCase() : "'");
+					// entity.setSentOn(new Date());
+					entity.setIsForward(customMessage.isForward());
+					entity.setSubscribed(customMessage.isSubscribed());
+					entity = sentMetadataMessageRepo.saveAndFlush(entity);
+					if(entity != null) {
+						/*MessageRequest request1 = new MessageRequest();
+						String messageStr = subscriptionMessage1;
+						messageStr = messageStr.replace("!city!", entity.getCity()).replace("!cat!", entity.getCategory());
+						request1.setBody(messageStr);
+						request1.setPhone(Long.valueOf(entity.getFrom()));
+						
+						forwardMessageToNumber(request1);
+						MessageRequest request2 = new MessageRequest();
+						messageStr = subscriptionMessage2;
+						request2.setBody(messageStr);
+						request2.setPhone(Long.valueOf(entity.getFrom()));
+						forwardMessageToNumber(request2);
+						
+						List<MessageInfo> messages = getResponses(entity.getCity(), entity.getCategory(), forwardBefore);
+						System.out.println("message count " + messages.size());
+						messages = getPositiveMessagesForForward(messages);
+						int msgCounter = 0;
+						for(MessageInfo msg : messages){
+							if(msgCounter < forwardMsgLimit) {
+								MessageRequest request = new MessageRequest();
+								messageStr = responseMessage;
+								String receivedFrom = msg.getChatId() != null ? msg.getChatId().substring(0, msg.getChatId().indexOf("@")) : null;
+								messageStr = messageStr.replaceAll("!mob!", receivedFrom).replace("!city!", entity.getCity()).replace("!cat!", entity.getCategory()).replace("!msg!", msg.getBody());
+								request.setBody(messageStr);
+								request.setPhone(Long.valueOf(entity.getFrom()));
+								asyncCovidWarriorServiceImpl.forwardMessageToNumber(request);
+								msgCounter++;
+							}
+						}*/
+						List<String> entiryList = contactRepo.findTop250MobileByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(entity.getCity(), entity.getCategory(), true);
+						List<String> masterList = new ArrayList<>();
+						/*if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
+							List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
+							if(!CollectionUtils.isEmpty(hospitalList)) {
+								masterList.addAll(hospitalList);
+							}
+						}*/
+						if(!CollectionUtils.isEmpty(entiryList)) {
+							masterList.addAll(entiryList);
+						}
+						if(!CollectionUtils.isEmpty(masterList)) {
+							System.out.println("Sending messages to : " + masterList.size());
+							covidWarriorSmsServiceImpl.sendSms(masterList, entity.getCity(), entity.getCategory(), customMessage.getSubCat());
+						}
+					}
+					
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			System.out.println("Exception while saving data " + ex);
+		}
+	}
+	
+	
 
 	private List<MessageInfo> getPositiveMessagesForForward(List<MessageInfo> messages) {
 		List<MessageInfo> validMessages = new ArrayList<>();
@@ -769,7 +877,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					String messageStr = twitterNotificationMessage;
 					messageStr = messageStr.replaceAll("!count!", customMessage.getMobileList().size() + "");
 					request1.setBody(messageStr);
-					request1.setPhone(Long.valueOf(mobile));
+					request1.setPhone(Long.valueOf(customMessage.getFrom()));
 					
 					forwardMessageToNumber(request1);
 					

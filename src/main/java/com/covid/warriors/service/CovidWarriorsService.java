@@ -38,4 +38,6 @@ public interface CovidWarriorsService {
 
 	TwitterMetadataResponse getTwitterData(CustomMessage customMessage);
 
+	void sendSms(CustomMessage customMessage, List<String> validNumberList);
+
 }

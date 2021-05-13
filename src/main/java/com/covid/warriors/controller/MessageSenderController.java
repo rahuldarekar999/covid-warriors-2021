@@ -22,6 +22,7 @@ import com.covid.warriors.request.model.TwitterMetadataResponse;
 import com.covid.warriors.request.model.WebhookMessageResponse;
 import com.covid.warriors.response.model.MessageInfo;
 import com.covid.warriors.service.CovidWarriorsService;
+import com.covid.warriors.service.impl.UrlService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 @RestController  
@@ -32,6 +33,10 @@ public class MessageSenderController {
 	
 	@Autowired
 	private CovidWarriorsService covidWarriorsService;
+	
+	
+	@Autowired
+	private UrlService urlService;
 	
 	@Value("${days.before}")
 	private int daysBefore;
@@ -139,7 +144,8 @@ public class MessageSenderController {
 	@RequestMapping(value="/subscribe", method = RequestMethod.POST) 
 	public ResponseEntity<?> subscribe(@RequestBody CustomMessage customMessage) 
 	{  	
-		covidWarriorsService.saveDataForSentMessages(customMessage, customMessage.getMobileList());
+	//	covidWarriorsService.saveDataForSentMessages(customMessage, customMessage.getMobileList());
+		covidWarriorsService.sendSms(customMessage, customMessage.getMobileList());
 	    return ResponseEntity.ok().body("Saved");
 	}
 	
@@ -167,5 +173,12 @@ public class MessageSenderController {
 	{  	
 		TwitterMetadataResponse twitterMetadata = covidWarriorsService.getTwitterData(customMessage);
 		return ResponseEntity.ok().body(twitterMetadata);
+	}
+	
+	@RequestMapping(value="/shortenUrl", method = RequestMethod.GET) 
+	public ResponseEntity<?> shortenUrl(@RequestParam("url") String url) 
+	{  	
+		String urlResponse = urlService.convertToShortUrl(url);
+		return ResponseEntity.ok().body(urlResponse);
 	}
 }
