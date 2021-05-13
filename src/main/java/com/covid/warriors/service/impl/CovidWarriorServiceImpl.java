@@ -417,7 +417,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 								msgCounter++;
 							}
 						}*/
-						List<String> entiryList = contactRepo.findTop250MobileByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(entity.getCity(), entity.getCategory(), true);
+						List<String> entiryList = contactRepo.findMobileByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(entity.getCity(), entity.getCategory(), true);
 						List<String> masterList = new ArrayList<>();
 						/*if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
 							List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
