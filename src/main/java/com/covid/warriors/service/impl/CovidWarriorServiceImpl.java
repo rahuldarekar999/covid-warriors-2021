@@ -519,7 +519,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					.map(message -> {
 						MessageInfo messageInfo = new MessageInfo();
 						messageInfo.setTime(message.getCreatedAt().atZone(ZoneId.systemDefault())
-								.toInstant().toEpochMilli());
+								.toEpochSecond());
 						messageInfo.setBody("y".equals(message.getMessage()) ? "Yes" : "");
 						messageInfo.setChatIdMobileNumber(message.getMobile());
 						return messageInfo;
