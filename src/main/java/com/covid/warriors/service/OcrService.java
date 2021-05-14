@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.i18n.phonenumbers.PhoneNumberMatch;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -52,7 +53,7 @@ public class OcrService {
         }
         catch (Exception e)
         {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         return "";
     }
@@ -82,7 +83,7 @@ public class OcrService {
         }
         catch (Exception e)
         {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         return Collections.emptySet();
     }
@@ -94,7 +95,11 @@ public class OcrService {
                 Iterator<PhoneNumberMatch> existsPhone= PhoneNumberUtil.getInstance().findNumbers(line.getText(),
                         "IN").iterator();
                 while (existsPhone.hasNext()){
-                    phoneNumbers.add(String.valueOf(existsPhone.next().number().getNationalNumber()));
+                    String number = String.valueOf(existsPhone.next().number().getNationalNumber());
+                    if(StringUtils.isNotBlank(number) && number.length() == 10) {
+                        phoneNumbers.add("91".concat(number));
+                    }
+
                 }
             });
         }

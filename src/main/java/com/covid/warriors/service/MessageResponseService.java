@@ -57,8 +57,8 @@ public class MessageResponseService {
                 paramsMap.put(value[0], value[1]);
             }
             MessageResponseEntity messageResponseEntity= new MessageResponseEntity();
-            messageResponseEntity.setCategory(paramsMap.get("ct"));
-            messageResponseEntity.setCity(paramsMap.get("c"));
+            messageResponseEntity.setCategory(paramsMap.get("c"));
+            messageResponseEntity.setCity(paramsMap.get("ct"));
             messageResponseEntity.setMessage(paramsMap.get("a"));
             messageResponseEntity.setMobile(paramsMap.get("m"));
             messageResponseEntity.setCreatedAt(LocalDateTime.now());

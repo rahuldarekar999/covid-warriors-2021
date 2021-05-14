@@ -36,10 +36,10 @@ public class DataUploadController {
     public Set<String> uploadImageForTextExtraction(@RequestParam("file") List<MultipartFile> files)  {
         Set<String> phoneNumbers = new HashSet<>();
         if(Objects.nonNull(files) && !files.isEmpty()) {
-            files.forEach(file -> {
+            for(MultipartFile file : files) {
                 String location = ocrService.uploadImaageForProcessing(file);
                 phoneNumbers.addAll(ocrService.getOcrParsedContents(location));
-            });
+            }
         }
         return phoneNumbers;
     }
