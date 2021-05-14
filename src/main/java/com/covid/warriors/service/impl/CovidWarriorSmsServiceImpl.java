@@ -243,12 +243,12 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
     }
 
 	@Override
-	public String sendSms(List<String> mobileList, String city, String category, String subCat) {
+	public String sendSms(List<String> mobileList, String city, String category, String subCat, String from) {
 		if (!CollectionUtils.isEmpty(mobileList)) {
 			Set<String> distinctNumbers = new LinkedHashSet<String>();  
 			mobileList.forEach(contact -> {
 				//String contantStr = getPhoneNumber(contact);
-				String msg = prepareSmsMessage(city, category, contact, subCat);
+				String msg = prepareSmsMessage(city, category, contact, subCat, from);
 				//ContactEntity contactEntity = contactRepo.findByMobileNumberAndCityAndCategory(contact, city, category);
 				System.out.println("message length : " + msg.length());
 				/*boolean resend = true;
@@ -285,10 +285,10 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 		return "No Data for given City And Category";
 	}
 	
-	private String prepareSmsMessage(String city, String category, String contact, String subCat) {
+	private String prepareSmsMessage(String city, String category, String contact, String subCat, String from) {
 		String messageStr = smsMessage;
-		String requestParamYes = "a=y&m=" + contact + "&c=" + category + "&ct=" + city;
-		String requestParamNo = "a=n&m=" + contact + "&c=" + category + "&ct=" + city;
+		String requestParamYes = "a=y&m=" + contact + "&c=" + category + "&ct=" + city + "&f=" + from + "&sc=" + subCat;
+		String requestParamNo = "a=n&m=" + contact + "&c=" + category + "&ct=" + city + "&f=" + from + "&sc=" + subCat;
 
 		String paramYes = urlService.convertToShortUrl(requestParamYes);
 		String smsLinkStrYes = smsLink;

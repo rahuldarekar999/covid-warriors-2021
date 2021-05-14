@@ -368,7 +368,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						fromList.add(mobile);
 						covidWarriorSmsServiceImpl.sendSms(fromList, smsMsg);
 						System.out.println("Sending messages to : " + masterList.size());
-						covidWarriorSmsServiceImpl.sendSms(masterList, customMessage.getCity(), customMessage.getCategory(), customMessage.getSubCat());
+						covidWarriorSmsServiceImpl.sendSms(masterList, customMessage.getCity(), customMessage.getCategory(), customMessage.getSubCat(), mobile);
 					}
 				}
 				if(!customMessage.isSubscribed()) {
@@ -378,7 +378,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					List<String> fromList = new ArrayList<>();
 					fromList.add(mobile);
 					covidWarriorSmsServiceImpl.sendSms(fromList, smsMsg);
-					covidWarriorSmsServiceImpl.sendSms(validNumberList, customMessage.getCity(), customMessage.getCategory(), customMessage.getSubCat());
+					covidWarriorSmsServiceImpl.sendSms(validNumberList, customMessage.getCity(), customMessage.getCategory(), customMessage.getSubCat(), mobile);
 					String to = String.join(",", validNumberList);
 					entity.setTo(to);
 					entity.setFrom(mobile);
@@ -445,7 +445,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 							fromList.add(mobile);
 							covidWarriorSmsServiceImpl.sendSms(fromList, smsMsg);
 							System.out.println("Sending messages to : " + masterList.size());
-							covidWarriorSmsServiceImpl.sendSms(masterList, customMessage.getCity(), customMessage.getCategory(), customMessage.getSubCat());
+							covidWarriorSmsServiceImpl.sendSms(masterList, customMessage.getCity(), customMessage.getCategory(), customMessage.getSubCat(), mobile);
 						}
 					}
 					
