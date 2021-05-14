@@ -27,9 +27,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.covid.warriors.entity.model.ContactEntity;
+import com.covid.warriors.repository.ContactRepository;
 import com.covid.warriors.request.model.Account;
 import com.covid.warriors.request.model.Message;
-import com.covid.warriors.request.model.MessageRequest;
 import com.covid.warriors.service.CovidWarriorsSmsService;
 
 import okhttp3.Headers;
@@ -128,6 +129,9 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 	@Autowired
 	private RestTemplate restTemplate;
 	
+	@Autowired
+	private ContactRepository contactRepo;
+	
 	@Override
 	@Async
 	public String sendSms(List<String> mobileList, String msg) {
@@ -144,19 +148,19 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 					}
 					distinctNumbers.clear();
 				}
-				String contactStr = getPhoneNumber(contact);
+				/*String contactStr = getPhoneNumber(contact);
 				if(StringUtils.isNotBlank(contactStr)) {
 					distinctNumbers.add(contactStr);
-				}
-				/*if(StringUtils.isNotBlank(contact)) {
-					distinctNumbers.add(contact);
 				}*/
+				if(StringUtils.isNotBlank(contact)) {
+					distinctNumbers.add(contact);
+				}
 			});		
 			
 			if(!CollectionUtils.isEmpty(distinctNumbers)) {
 				try {
-	//				sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
-					sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
+					sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
+	//				sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
 				} catch (Exception e) {
 					System.out.println("Error while sending messages to  ; " + distinctNumbers);
 					e.printStackTrace();
@@ -275,12 +279,32 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 		if (!CollectionUtils.isEmpty(mobileList)) {
 			Set<String> distinctNumbers = new LinkedHashSet<String>();  
 			mobileList.forEach(contact -> {
-				String contantStr = getPhoneNumber(contact);
+				//String contantStr = getPhoneNumber(contact);
 				String msg = prepareSmsMessage(city, category, contact, subCat);
+				//ContactEntity contactEntity = contactRepo.findByMobileNumberAndCityAndCategory(contact, city, category);
 				System.out.println("message length : " + msg.length());
+				/*boolean resend = true;
+				if (contactEntity.getLastMessageSentTime() != null) {
+					Date currDate = new Date();
+					long diff = currDate.getTime() - contactEntity.getLastMessageSentTime().getTime();
+					long lastSentDiff = diff / (60 * 1000);
+					if (lastSentDiff < resendWaitMin)
+						resend = false;
+				}
+				if (contactEntity.getLastMessageReceivedTime() != null) {
+					Date currDate = new Date();
+					long diff = currDate.getTime() - contactEntity.getLastMessageReceivedTime().getTime();
+					long lastReceivedDiff = diff / (60 * 1000);
+					if (lastReceivedDiff < resendWaitMin)
+						resend = false;
+				} else if (contactEntity.getLastMessageReceivedTime() == null && contactEntity.getMessageSentCount() != null
+						&& contactEntity.getDailyMsgSentCount() >= stopMessageSentCount) {
+					resend = false;
+				}*/
 				try{
-				//	sendBulkSmsGatewayHub(msg, contact);
-					sendBulkSmsSmsMarketing(msg, contantStr);
+					sendBulkSmsGatewayHub(msg, contact);
+				//	updateSmsCountForContact(contact, city, category);
+				//	sendBulkSmsSmsMarketing(msg, contantStr);
 				} catch (Exception e) {
 					System.out.println("Error while sending messages to  ; " + distinctNumbers);
 					e.printStackTrace();
@@ -334,6 +358,9 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 		
 		HttpEntity<?> entity = new HttpEntity<>(request, headers);
 		String response = restTemplate.exchange(smsApiEndpoint + smsApiSendContext, HttpMethod.POST, entity, String.class).getBody();
-		System.out.println(response);
+	}
+
+	private void updateSmsCountForContact(ContactEntity contactEntity) {
+		contactEntity.setTotalSmsSentCount(contactEntity.getTotalSmsSentCount() + 1);
 	}
 }
