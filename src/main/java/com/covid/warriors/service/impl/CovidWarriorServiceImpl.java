@@ -348,7 +348,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				
 				if(entity.getSubscribed() != null && Boolean.compare(entity.getSubscribed().booleanValue(), customMessage.isSubscribed()) == 0) {
 					subscribeUser = false;
-					List<String> entiryList = contactRepo.findMobileByCityAndCategoryAndValid(entity.getCity(), entity.getCategory(), true);
+					List<String> entiryList = contactRepo.findMobileByCityAndCategoryAndValid(customMessage.getCity(), customMessage.getCategory(), true);
 					List<String> masterList = new ArrayList<>();
 					/*if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
 						List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
@@ -366,7 +366,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						fromList.add(mobile);
 						covidWarriorSmsServiceImpl.sendSms(fromList, smsMsg);
 						System.out.println("Sending messages to : " + masterList.size());
-						covidWarriorSmsServiceImpl.sendSms(masterList, entity.getCity(), entity.getCategory(), customMessage.getSubCat());
+						covidWarriorSmsServiceImpl.sendSms(masterList, customMessage.getCity(), customMessage.getCategory(), customMessage.getSubCat());
 					}
 				}
 				if(!customMessage.isSubscribed()) {
@@ -376,7 +376,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					List<String> fromList = new ArrayList<>();
 					fromList.add(mobile);
 					covidWarriorSmsServiceImpl.sendSms(fromList, smsMsg);
-					covidWarriorSmsServiceImpl.sendSms(validNumberList, entity.getCity(), entity.getCategory(), customMessage.getSubCat());
+					covidWarriorSmsServiceImpl.sendSms(validNumberList, customMessage.getCity(), customMessage.getCategory(), customMessage.getSubCat());
 					String to = String.join(",", validNumberList);
 					entity.setTo(to);
 					entity.setFrom(mobile);
@@ -425,7 +425,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 								msgCounter++;
 							}
 						}*/
-						List<String> entiryList = contactRepo.findMobileByCityAndCategoryAndValid(entity.getCity(), entity.getCategory(), true);
+						List<String> entiryList = contactRepo.findMobileByCityAndCategoryAndValid(customMessage.getCity(), customMessage.getCategory(), true);
 						List<String> masterList = new ArrayList<>();
 						/*if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
 							List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
@@ -443,7 +443,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 							fromList.add(mobile);
 							covidWarriorSmsServiceImpl.sendSms(fromList, smsMsg);
 							System.out.println("Sending messages to : " + masterList.size());
-							covidWarriorSmsServiceImpl.sendSms(masterList, entity.getCity(), entity.getCategory(), customMessage.getSubCat());
+							covidWarriorSmsServiceImpl.sendSms(masterList, customMessage.getCity(), customMessage.getCategory(), customMessage.getSubCat());
 						}
 					}
 					
