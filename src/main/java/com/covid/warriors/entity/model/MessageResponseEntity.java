@@ -27,6 +27,9 @@ public class MessageResponseEntity {
 	@Column(name = "message")
 	private String message;
 
+	@Column(name = "sub_category")
+	private String subCategory;
+
 	public long getId() {
 		return id;
 	}
@@ -75,4 +78,11 @@ public class MessageResponseEntity {
 		this.message = message;
 	}
 
+	public String getSubCategory() {
+		return subCategory;
+	}
+
+	public void setSubCategory(String subCategory) {
+		this.subCategory = subCategory;
+	}
 }

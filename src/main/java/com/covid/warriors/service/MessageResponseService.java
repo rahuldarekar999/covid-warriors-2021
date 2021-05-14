@@ -1,11 +1,7 @@
 package com.covid.warriors.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,15 +58,15 @@ public class MessageResponseService {
             messageResponseEntity.setMessage(paramsMap.get("a"));
             messageResponseEntity.setMobile(paramsMap.get("m"));
             messageResponseEntity.setCreatedAt(LocalDateTime.now());
-            
+            messageResponseEntity.setSubCategory(paramsMap.get("sc"));
             if(StringUtils.isNotBlank(messageResponseEntity.getMessage()) && 
             		validAnswers.contains(messageResponseEntity.getMessage().toLowerCase())) {
 	            String msg = smsReplyMessage;
 	            msg = msg.replace("!cat!", messageResponseEntity.getCategory()).replace("!mob!", messageResponseEntity.getMobile())
 	            		.replace("!city!", messageResponseEntity.getCity());
-	            List<String> mobList = new ArrayList<>();
-	            mobList.add(messageResponseEntity.getMobile());	            
-	            covidWarriorSmsServiceImpl.sendSms(mobList, msg);
+
+
+	            covidWarriorSmsServiceImpl.sendSms(Collections.singletonList(paramsMap.get("f")), msg);
             }
             return messageResponseEntity;
         }
