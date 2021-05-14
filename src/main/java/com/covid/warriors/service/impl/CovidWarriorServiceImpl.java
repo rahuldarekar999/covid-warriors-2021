@@ -370,9 +370,17 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 					}
 				}
 				if(!customMessage.isSubscribed()) {
+					
+					String smsMsg = smsNotification;
+					smsMsg = smsMsg.replace("!count!", validNumberList.size()+"");
+					List<String> fromList = new ArrayList<>();
+					fromList.add(mobile);
+					covidWarriorSmsServiceImpl.sendSms(fromList, smsMsg);
+					covidWarriorSmsServiceImpl.sendSms(validNumberList, entity.getCity(), entity.getCategory(), customMessage.getSubCat());
 					String to = String.join(",", validNumberList);
 					entity.setTo(to);
 					entity.setFrom(mobile);
+					
 					entity.setCategory(customMessage.getCategory() != null ? customMessage.getCategory().toUpperCase():"");
 					entity.setCity(customMessage.getCity() != null ? customMessage.getCity().toUpperCase() : "'");
 					// entity.setSentOn(new Date());
