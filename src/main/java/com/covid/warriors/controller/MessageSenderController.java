@@ -163,8 +163,8 @@ public class MessageSenderController {
 	{  	
 		Map<String, Integer> responseMap = new HashMap<>();
 		int dbCount = covidWarriorsService.getCountOfValidNumberByCityAndCategory(city, category);
-		int count = dbCount > 250 ? 250 : dbCount;
-		responseMap.put("data", count);
+		//int count = dbCount > 250 ? 250 : dbCount;
+		responseMap.put("data", dbCount);
 	    return ResponseEntity.ok().body(responseMap);
 	}
 	
