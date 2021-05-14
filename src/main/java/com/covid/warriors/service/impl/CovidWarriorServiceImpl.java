@@ -3,9 +3,6 @@ package com.covid.warriors.service.impl;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -21,8 +18,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.covid.warriors.entity.model.*;
-import com.covid.warriors.repository.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +30,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.covid.warriors.entity.model.CategoryMessage;
+import com.covid.warriors.entity.model.CityEntity;
+import com.covid.warriors.entity.model.ContactEntity;
+import com.covid.warriors.entity.model.SentMessageMetadataEntity;
+import com.covid.warriors.repository.CategoryMessageRepository;
+import com.covid.warriors.repository.CityRepository;
+import com.covid.warriors.repository.ContactRepository;
+import com.covid.warriors.repository.SentMessageMetadataRepository;
 import com.covid.warriors.request.model.CustomMessage;
 import com.covid.warriors.request.model.MessageRequest;
 import com.covid.warriors.request.model.ResponseMessage;
@@ -117,9 +120,6 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	@Value("#{'${valid.response.black.list.forward}'.split(',')}")
 	private List<String> blackListOfForwardResponses;
 
-	@Value("${response.message.daysBefore}")
-	private Long responseDaysBefore;
-
 	@Autowired
 	private RestTemplate restTemplate;
 
@@ -146,9 +146,6 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	
 	@Autowired
 	private CovidWarriorsSmsService covidWarriorSmsServiceImpl;
-
-	@Autowired
-	private MessageResponseRepository messageResponseRepository;
 
 	@Override
 	public String sendMessage(String city, String category) {
@@ -351,7 +348,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				
 				if(entity.getSubscribed() != null && Boolean.compare(entity.getSubscribed().booleanValue(), customMessage.isSubscribed()) == 0) {
 					subscribeUser = false;
-					List<String> entiryList = contactRepo.findMobileByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(entity.getCity(), entity.getCategory(), true);
+					List<String> entiryList = contactRepo.findMobileByCityAndCategoryAndValid(entity.getCity(), entity.getCategory(), true);
 					List<String> masterList = new ArrayList<>();
 					/*if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
 						List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
@@ -367,7 +364,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 						smsMsg = smsMsg.replace("!count!", masterList.size()+"");
 						List<String> fromList = new ArrayList<>();
 						fromList.add(mobile);
-						covidWarriorSmsServiceImpl.sendSms(masterList, smsMsg);
+						covidWarriorSmsServiceImpl.sendSms(fromList, smsMsg);
 						System.out.println("Sending messages to : " + masterList.size());
 						covidWarriorSmsServiceImpl.sendSms(masterList, entity.getCity(), entity.getCategory(), customMessage.getSubCat());
 					}
@@ -420,7 +417,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 								msgCounter++;
 							}
 						}*/
-						List<String> entiryList = contactRepo.findMobileByCityAndCategoryAndValidOrderByLastMessageReceivedTimeDesc(entity.getCity(), entity.getCategory(), true);
+						List<String> entiryList = contactRepo.findMobileByCityAndCategoryAndValid(entity.getCity(), entity.getCategory(), true);
 						List<String> masterList = new ArrayList<>();
 						/*if("MEDICINE".equalsIgnoreCase(entity.getCategory())) {
 							List<ContactEntity> hospitalList = contactRepo.findByCityAndCategoryAndValid(entity.getCity(), "BED", true);
@@ -436,7 +433,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 							smsMsg = smsMsg.replace("!count!", masterList.size()+"");
 							List<String> fromList = new ArrayList<>();
 							fromList.add(mobile);
-							covidWarriorSmsServiceImpl.sendSms(masterList, smsMsg);
+							covidWarriorSmsServiceImpl.sendSms(fromList, smsMsg);
 							System.out.println("Sending messages to : " + masterList.size());
 							covidWarriorSmsServiceImpl.sendSms(masterList, entity.getCity(), entity.getCategory(), customMessage.getSubCat());
 						}
@@ -472,7 +469,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 
 	@Override
 	public List<MessageInfo> getResponses(String city, String category, int daysToMinus) {
-		/*HttpHeaders headers = new HttpHeaders();
+		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		List<MessageInfo> messages = new ArrayList<MessageInfo>();
 		boolean isContinue = true;
@@ -480,7 +477,7 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 	//	do {
 			//String url = apiUrl + instanceId + "/messagesHistory?token=" + token + "&page=" + pageCount;
 			long maxTime = (Double.valueOf((Math.floor(new Date().getTime() / 1000)))).longValue();
-
+			
 			long minTime = getMinTime(daysToMinus);
 			String url = apiUrl + instanceId + "/messages?limit=0&token=" + token + "&min_time=" + minTime + "&max_time=" + maxTime;
 			System.out.println("URL : " + url);
@@ -491,35 +488,15 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 				if (responseObj != null && !responseObj.getMessages().isEmpty()) {
 				//	pageCount++;
 					messages.addAll(getValidResponses(city, category, responseObj.getMessages()));
-				} *//*else {
+				} /*else {
 					isContinue = false;
 					break;
-				}*//*
+				}*/
 			} catch (JsonProcessingException ex) {
 				System.out.println("Error while parsing response : " + ex);
 			}
 	//	} while(isContinue);
-		return messages;*/
-		return getResponseMessages(city, category);
-	}
-
-	private List<MessageInfo> getResponseMessages(String city, String category) {
-		List<MessageResponseEntity> messageResponseEntities = messageResponseRepository
-				.findByCreatedAtAfterAndMessageAndCityAndCategory(LocalDateTime.now().minusDays(responseDaysBefore)
-				,"y",city, category);
-		if(Objects.nonNull(messageResponseEntities) && !messageResponseEntities.isEmpty()) {
-			List<MessageInfo> responseMessages = messageResponseEntities.stream()
-					.map(message -> {
-						MessageInfo messageInfo = new MessageInfo();
-						messageInfo.setTime(message.getCreatedAt().atZone(ZoneId.systemDefault())
-								.toInstant().toEpochMilli());
-						messageInfo.setBody("y".equals(message.getMessage()) ? "Yes" : "");
-						messageInfo.setChatIdMobileNumber(message.getMobile());
-						return messageInfo;
-					}).collect(Collectors.toList());
-			return responseMessages;
-		}
-		return Collections.emptyList();
+		return messages;
 	}
 
 	@Override

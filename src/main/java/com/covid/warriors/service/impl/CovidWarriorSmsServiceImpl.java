@@ -3,10 +3,14 @@ package com.covid.warriors.service.impl;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,11 +18,18 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.RestTemplate;
 
-import com.covid.warriors.request.model.CustomMessage;
+import com.covid.warriors.request.model.Account;
+import com.covid.warriors.request.model.Message;
+import com.covid.warriors.request.model.MessageRequest;
 import com.covid.warriors.service.CovidWarriorsSmsService;
 
 import okhttp3.Headers;
@@ -93,6 +104,30 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 	@Value("${sms.link}")
 	private String smsLink;
 	
+	@Value("${sms.api.link}")
+	private String smsApiEndpoint;
+	
+	@Value("${sms.api.send}")
+	private String smsApiSendContext;
+	
+	@Value("${sms.api.key}")
+	private String apiKey;
+	
+	@Value("${sms.sender.id}")
+	private String senderId;
+	
+	@Value("${sms.channel}")
+	private String channel;
+	
+	@Value("${sms.dcs}")
+	private String dcs;
+	
+	@Value("${sms.route}")
+	private String route;
+			
+	@Autowired
+	private RestTemplate restTemplate;
+	
 	@Override
 	@Async
 	public String sendSms(List<String> mobileList, String msg) {
@@ -101,26 +136,30 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 			mobileList.forEach(contact -> {
 				if(distinctNumbers.size() == forwardMsgSmsLimit) {
 					try {
-						sendBulkSms(msg, String.join("\n",distinctNumbers));
-					} catch (IOException e) {
+						sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
+						//sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
+					} catch (Exception e) {
 						System.out.println("Error while sending messages to  ; " + distinctNumbers);
 						e.printStackTrace();
 					}
 					distinctNumbers.clear();
 				}
-				String contactStr = getPhoneNumber(contact);
+				/*String contactStr = getPhoneNumber(contact);
 				if(StringUtils.isNotBlank(contactStr)) {
 					distinctNumbers.add(contactStr);
+				}*/
+				if(StringUtils.isNotBlank(contact)) {
+					distinctNumbers.add(contact);
 				}
-				
 			});		
 		/*		asyncCovidWarriorServiceImpl.sendAsyncMessage(contact, customMessage.getCity(), customMessage.getCategory(), message);
 			});*/
 			
 			if(!CollectionUtils.isEmpty(distinctNumbers)) {
 				try {
-					sendBulkSms(msg, String.join("\n",distinctNumbers));
-				} catch (IOException e) {
+					sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
+					//sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
+				} catch (Exception e) {
 					System.out.println("Error while sending messages to  ; " + distinctNumbers);
 					e.printStackTrace();
 				}
@@ -154,7 +193,7 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 		return "";
 	}
 	
-	public void sendBulkSms(String msg, String mobileNumbers) throws IOException {
+	public void sendBulkSmsSmsMarketing(String msg, String mobileNumbers) throws IOException {
 		OkHttpClient client = new OkHttpClient().newBuilder()
 				  .build();
 		Request request = new Request.Builder()
@@ -238,12 +277,13 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 		if (!CollectionUtils.isEmpty(mobileList)) {
 			Set<String> distinctNumbers = new LinkedHashSet<String>();  
 			mobileList.forEach(contact -> {
-				String contantStr = getPhoneNumber(contact);
+				//String contantStr = getPhoneNumber(contact);
 				String msg = prepareSmsMessage(city, category, contact, subCat);
 				System.out.println("message length : " + msg.length());
 				try{
-					sendBulkSms(msg, contantStr);
-				} catch (IOException e) {
+					sendBulkSmsGatewayHub(msg, contact);
+				//	sendBulkSmsSmsMarketing(msg, contantStr);
+				} catch (Exception e) {
 					System.out.println("Error while sending messages to  ; " + distinctNumbers);
 					e.printStackTrace();
 				}				
@@ -269,5 +309,33 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 		smsLinkStrNo = smsLinkStrNo + "p=" + paramNo;
 		
 		return messageStr.replace("!cat!", subCat).replace("!yeslink!", smsLinkStrYes).replace("!nolink!", smsLinkStrNo);
+	}
+	
+	
+	public void sendBulkSmsGatewayHub(String msg, String mobileNumbers) {
+		
+		Account account = new Account();
+		account.setAPIKey(apiKey);
+		account.setSenderId(senderId);
+		account.setChannel(channel);
+		account.setDCS(dcs);
+		account.setRoute(route);
+		
+		Message message = new Message();
+		List<Message> listOfMessages = new ArrayList<>();
+		
+		message.setNumber(mobileNumbers);
+		message.setText(msg);
+		
+		listOfMessages.add(message);
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+		Map<String, Object> request = new HashMap<>();
+		request.put("Account", account);
+		request.put("Messages", listOfMessages);
+		
+		HttpEntity<?> entity = new HttpEntity<>(request, headers);
+		String response = restTemplate.exchange(smsApiEndpoint + smsApiSendContext, HttpMethod.POST, entity, String.class).getBody();
+		System.out.println(response);
 	}
 }

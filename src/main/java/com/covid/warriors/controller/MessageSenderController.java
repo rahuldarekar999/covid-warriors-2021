@@ -190,4 +190,12 @@ public class MessageSenderController {
 		String urlResponse = urlService.convertToShortUrl(url);
 		return ResponseEntity.ok().body(urlResponse);
 	}
+	
+	@RequestMapping(value="/sendSms", method = RequestMethod.POST) 
+	public ResponseEntity<?> sendSms(@RequestBody CustomMessage customMessage) 
+	{  	
+		covidWarriorsService.sendSms(customMessage, customMessage.getMobileList());
+		
+		return ResponseEntity.ok().body("true");
+	}
 }
