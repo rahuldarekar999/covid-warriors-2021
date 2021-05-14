@@ -136,29 +136,27 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 			mobileList.forEach(contact -> {
 				if(distinctNumbers.size() == forwardMsgSmsLimit) {
 					try {
-						sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
-						//sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
+						//sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
+						sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
 					} catch (Exception e) {
 						System.out.println("Error while sending messages to  ; " + distinctNumbers);
 						e.printStackTrace();
 					}
 					distinctNumbers.clear();
 				}
-				/*String contactStr = getPhoneNumber(contact);
+				String contactStr = getPhoneNumber(contact);
 				if(StringUtils.isNotBlank(contactStr)) {
 					distinctNumbers.add(contactStr);
-				}*/
-				if(StringUtils.isNotBlank(contact)) {
-					distinctNumbers.add(contact);
 				}
+				/*if(StringUtils.isNotBlank(contact)) {
+					distinctNumbers.add(contact);
+				}*/
 			});		
-		/*		asyncCovidWarriorServiceImpl.sendAsyncMessage(contact, customMessage.getCity(), customMessage.getCategory(), message);
-			});*/
 			
 			if(!CollectionUtils.isEmpty(distinctNumbers)) {
 				try {
-					sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
-					//sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
+	//				sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
+					sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
 				} catch (Exception e) {
 					System.out.println("Error while sending messages to  ; " + distinctNumbers);
 					e.printStackTrace();
@@ -277,12 +275,12 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 		if (!CollectionUtils.isEmpty(mobileList)) {
 			Set<String> distinctNumbers = new LinkedHashSet<String>();  
 			mobileList.forEach(contact -> {
-				//String contantStr = getPhoneNumber(contact);
+				String contantStr = getPhoneNumber(contact);
 				String msg = prepareSmsMessage(city, category, contact, subCat);
 				System.out.println("message length : " + msg.length());
 				try{
-					sendBulkSmsGatewayHub(msg, contact);
-				//	sendBulkSmsSmsMarketing(msg, contantStr);
+				//	sendBulkSmsGatewayHub(msg, contact);
+					sendBulkSmsSmsMarketing(msg, contantStr);
 				} catch (Exception e) {
 					System.out.println("Error while sending messages to  ; " + distinctNumbers);
 					e.printStackTrace();
