@@ -140,8 +140,8 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 			mobileList.forEach(contact -> {
 				if(distinctNumbers.size() == forwardMsgSmsLimit) {
 					try {
-						//sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
-						sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
+						sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
+						//sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
 					} catch (Exception e) {
 						System.out.println("Error while sending messages to  ; " + distinctNumbers);
 						e.printStackTrace();
