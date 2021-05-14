@@ -50,12 +50,12 @@ public class ContactEntity {
 	@Column(name = "source")
 	private String source;
 	
-	@Column(name = "daily_sms_count")
+	/*@Column(name = "daily_sms_count")
 	private int dailyMsgSentCount;
 	
 	@Column(name = "total_sms_sent_count")
 	private long totalSmsSentCount;
-	
+	*/
 	public String getMobileNumber() {
 		return mobileNumber;
 	}
@@ -156,7 +156,7 @@ public class ContactEntity {
 		this.source = source;
 	}
 	
-	public int getDailyMsgSentCount() {
+	/*public int getDailyMsgSentCount() {
 		return dailyMsgSentCount;
 	}
 
@@ -170,7 +170,7 @@ public class ContactEntity {
 
 	public void setTotalSmsSentCount(long totalSmsSentCount) {
 		this.totalSmsSentCount = totalSmsSentCount;
-	}
+	}*/
 
 	@Override
 	public String toString() {
