@@ -361,6 +361,6 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 	}
 
 	private void updateSmsCountForContact(ContactEntity contactEntity) {
-		contactEntity.setTotalSmsSentCount(contactEntity.getTotalSmsSentCount() + 1);
+	//	contactEntity.setTotalSmsSentCount(contactEntity.getTotalSmsSentCount() + 1);
 	}
 }
