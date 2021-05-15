@@ -1,9 +1,7 @@
 package com.covid.warriors.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -103,7 +101,7 @@ public class MessageSenderController {
 	{  
 		
 		List<MessageInfo> messages = covidWarriorsService.getResponses(city, category, daysBefore);
-		Map<String, List<MessageInfo>> messageInfoMap = new HashMap<>();
+		Map<String, List<MessageInfo>> messageInfoMap = new LinkedHashMap<>();
 		for(MessageInfo messageInfo : messages) {
 			List<MessageInfo> messageInfoList = messageInfoMap
 					.getOrDefault(messageInfo.getChatIdMobileNumber(), new ArrayList<>());
@@ -111,11 +109,14 @@ public class MessageSenderController {
 			messageInfoMap.putIfAbsent(messageInfo.getChatIdMobileNumber(), messageInfoList);
 		}
 		return ResponseEntity.ok(messageInfoMap);
+		/*return ResponseEntity.ok(messageInfoMap.entrySet().
+				stream().sorted(Comparator.comparing(entry -> entry.getValue().get(0).getTime()))
+		.collect(Collectors.toMap(Map.Entry :: getKey, Map.Entry :: getValue, (a, b) -> a, LinkedHashMap::new)));*/
 		//return ResponseEntity.ok().body(covidWarriorsService.getPositiveMessages(messages, city, category, true));
 	}
 	
 	@RequestMapping("/getCity")  
-	public ResponseEntity<?> getCityList()   
+	public ResponseEntity<?> getCityList()
 	{  
 		
 		List<String> cityList = covidWarriorsService.getCityList();
