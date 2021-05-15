@@ -5,17 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -525,7 +515,8 @@ public class CovidWarriorServiceImpl implements CovidWarriorsService {
 								msg.concat(" - ".concat(message.getSubCategory())));
 						messageInfo.setChatIdMobileNumber(message.getMobile());
 						return messageInfo;
-					}).collect(Collectors.toList());
+					}).sorted(Comparator.comparingLong(MessageInfo :: getTime).reversed())
+					.collect(Collectors.toList());
 			return responseMessages;
 		}
 		return Collections.emptyList();
