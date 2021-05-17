@@ -3,6 +3,7 @@ package com.covid.warriors.service;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import com.covid.warriors.request.model.ConfirmationRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,14 +31,19 @@ public class MessageResponseService {
 	@Autowired
 	private CovidWarriorsSmsService covidWarriorSmsServiceImpl;
 
-	public String saveMessageResponse(String param) {
+	public String saveMessageResponse(ConfirmationRequest confirmationRequest) {
 		try {
-			String decodedParams = urlService.getOriginalUrl(param);
-			MessageResponseEntity messageResponseEntity = getMessageResponseEntity(decodedParams);
-			if (Objects.nonNull(messageResponseEntity)) {
-				messageResponseRepository.save(messageResponseEntity);
-				return "SUCCESS";
-			}
+			/*String decodedParams = urlService.getOriginalUrl(param);
+			MessageResponseEntity messageResponseEntity = getMessageResponseEntity(decodedParams);*/
+			MessageResponseEntity messageResponseEntity = new MessageResponseEntity();
+			messageResponseEntity.setMobile(confirmationRequest.getMobile());
+			messageResponseEntity.setCity(confirmationRequest.getCity());
+			messageResponseEntity.setCategory(confirmationRequest.getCategory());
+			messageResponseEntity.setMessage(confirmationRequest.getMessage());
+			messageResponseEntity.setSubCategory(confirmationRequest.getSubCategory());
+			messageResponseEntity.setCreatedAt(LocalDateTime.now());
+			messageResponseRepository.save(messageResponseEntity);
+			return "SUCCESS";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
