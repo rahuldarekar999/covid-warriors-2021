@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.covid.warriors.entity.model.MessageResponseEntity;
 import com.covid.warriors.service.MessageResponseService;
 
 @RestController
@@ -25,5 +26,11 @@ public class MessageResponseController {
         Map<String, String> resMap = new HashMap<>(1);
         resMap.put("status", status);
         return resMap;
+    }
+    
+    @RequestMapping(value = "/user-metadata", method = RequestMethod.GET)
+    public Map<String, MessageResponseEntity> getUserMetadata(@RequestParam String p) {
+    	Map<String, MessageResponseEntity> reesponseMap = messageResponseService.getUserMetadata(p);
+        return reesponseMap;
     }
 }

@@ -46,4 +46,17 @@ public class UrlService {
 
         return entity.getLongUrl();
     }
+    
+    public String getOriginalUrlWithoutDelete(String shortUrl) {
+        long id = conversion.decode(shortUrl);
+        UrlEntity entity = urlRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("There is no entity with " + shortUrl));
+        return entity.getLongUrl();
+    }
+    
+    public static void main(String[] args) {
+    	String url = "a=n&m=919700258333&c=MEDICINE&ct=HYDERABAD";
+    	BaseConversion consersion1 = new BaseConversion();
+    	System.out.println(consersion1.encode(3696));
+	}
 }
