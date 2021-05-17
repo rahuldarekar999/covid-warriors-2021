@@ -1,7 +1,10 @@
 package com.covid.warriors.controller;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +24,7 @@ import com.covid.warriors.request.model.TwitterMetadataResponse;
 import com.covid.warriors.request.model.WebhookMessageResponse;
 import com.covid.warriors.response.model.MessageInfo;
 import com.covid.warriors.service.CovidWarriorsService;
+import com.covid.warriors.service.CovidWarriorsSmsService;
 import com.covid.warriors.service.impl.UrlService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -33,6 +37,8 @@ public class MessageSenderController {
 	@Autowired
 	private CovidWarriorsService covidWarriorsService;
 	
+	@Autowired
+	private CovidWarriorsSmsService covidWarriorsSmsService;
 	
 	@Autowired
 	private UrlService urlService;
@@ -198,5 +204,14 @@ public class MessageSenderController {
 		covidWarriorsService.sendSms(customMessage, customMessage.getMobileList());
 		
 		return ResponseEntity.ok().body("true");
+	}
+	
+	@RequestMapping("/question")  
+	public ResponseEntity<?> getQuestion(@RequestParam(required = false) String city, @RequestParam(required = false) String category,
+			@RequestParam String subCat)
+	{  
+		Map<String, String> responseMap = new HashMap<>();
+		responseMap.put("data", covidWarriorsSmsService.getQuestion(city, category, subCat));
+		return ResponseEntity.ok().body(responseMap);
 	}
 }

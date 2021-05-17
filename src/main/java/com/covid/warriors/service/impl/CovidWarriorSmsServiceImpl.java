@@ -77,6 +77,9 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 	@Value("${send.help.message}")
 	private String helpMessageText;
 	
+	@Value("${send.help.message.question}")
+	private String question;
+	
 //	@Value("#{'${valid.response.black.list}'.split(',')}")
 	@Value("#{'${valid.response.black.list}'.split(',')}")
 	private List<String> blackListOfResponses;
@@ -287,20 +290,22 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 	
 	private String prepareSmsMessage(String city, String category, String contact, String subCat, String from) {
 		String messageStr = smsMessage;
-		String requestParamYes = "a=y&m=" + contact + "&c=" + category + "&ct=" + city + "&f=" + from + "&sc=" + subCat;
-		String requestParamNo = "a=n&m=" + contact + "&c=" + category + "&ct=" + city + "&f=" + from + "&sc=" + subCat;
-
+		String requestParamYes = "m=" + contact + "&c=" + category + "&ct=" + city + "&f=" + from + "&sc=" + subCat;
+		
 		String paramYes = urlService.convertToShortUrl(requestParamYes);
 		String smsLinkStrYes = smsLink;
 		smsLinkStrYes = smsLinkStrYes + "p=" + paramYes;
+		String question = getQuestion(city, category, subCat);
 		
-		String paramNo = urlService.convertToShortUrl(requestParamNo);
-		String smsLinkStrNo= smsLink;
-		smsLinkStrNo = smsLinkStrNo + "p=" + paramNo;
-		
-		return messageStr.replace("!cat!", subCat).replace("!yeslink!", smsLinkStrYes).replace("!nolink!", smsLinkStrNo);
+		return messageStr.replace("!question!", question).replace("!link!", smsLinkStrYes);
 	}
 	
+	@Override
+	public String getQuestion(String city, String category, String subCat) {
+		String qustionStr = this.question;
+		return qustionStr.replace("!cat!", subCat);
+	}
+
 	private void updateSmsCountForContact(ContactEntity contactEntity) {
 	//	contactEntity.setTotalSmsSentCount(contactEntity.getTotalSmsSentCount() + 1);
 	}
