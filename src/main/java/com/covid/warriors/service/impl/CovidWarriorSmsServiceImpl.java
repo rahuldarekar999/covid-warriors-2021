@@ -295,9 +295,7 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 		String paramYes = urlService.convertToShortUrl(requestParamYes);
 		String smsLinkStrYes = smsLink;
 		smsLinkStrYes = smsLinkStrYes + "p=" + paramYes;
-		String question = getQuestion(city, category, subCat);
-		
-		return messageStr.replace("!question!", question).replace("!link!", smsLinkStrYes);
+		return messageStr.replace("!cat!", subCat).replace("!link!", smsLinkStrYes);
 	}
 	
 	@Override

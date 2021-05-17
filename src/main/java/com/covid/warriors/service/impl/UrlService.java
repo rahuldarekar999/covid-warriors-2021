@@ -57,6 +57,6 @@ public class UrlService {
     public static void main(String[] args) {
     	String url = "a=n&m=919700258333&c=MEDICINE&ct=HYDERABAD";
     	BaseConversion consersion1 = new BaseConversion();
-    	System.out.println(consersion1.encode(3696));
+    	System.out.println(consersion1.encode(45875));
 	}
 }
