@@ -4,15 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InstagramScraperResponse {
-    @JsonProperty("data")
-    private Data data;
+public class Data {
+    @JsonProperty("hashtag")
+    private HashTag hashTag;
 
-    public Data getData() {
-        return data;
+    public HashTag getHashTag() {
+        return hashTag;
     }
 
-    public void setData(Data data) {
-        this.data = data;
+    public void setHashTag(HashTag hashTag) {
+        this.hashTag = hashTag;
     }
 }
