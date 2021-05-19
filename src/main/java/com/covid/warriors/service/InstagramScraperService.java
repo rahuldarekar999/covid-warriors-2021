@@ -1,15 +1,10 @@
 package com.covid.warriors.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.covid.warriors.response.model.instagram.InstagramScraperResponse;
@@ -30,12 +25,19 @@ public class InstagramScraperService {
 
     private static final String rapidApiHost = "instagram28.p.rapidapi.com";
 
+    @Value("#{${instagram.hashtags}}")
+    private Map<String, String> hashTagsMap;
+
     public Set<String> getContactsFromInstagram(String city, String category) {
         try {
+
         	List<String> hashtags = new ArrayList<>();
-    		
-    		hashtags.add(city.concat(category));
-    		hashtags.add(category.concat("in").concat(city));
+        	if(Objects.nonNull(hashTagsMap.get(city))) {
+        	    hashtags.addAll(Arrays.asList(hashTagsMap.get(city).split(",")));
+            } else {
+                hashtags.add(city.concat(category));
+                hashtags.add(category.concat("in").concat(city));
+            }
     		Set<String> set = new HashSet<>();
     		hashtags.forEach(hashtag -> {
     			 InstagramScraperResponse scraperResponse = getPostsFromInstagram(hashtag);
