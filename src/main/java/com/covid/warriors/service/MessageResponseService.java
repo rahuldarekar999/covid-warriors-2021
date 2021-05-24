@@ -49,7 +49,7 @@ public class MessageResponseService {
 						.replace("!mob!", messageResponseEntity.getMobile())
 						.replace("!city!", messageResponseEntity.getCity());
 
-				covidWarriorSmsServiceImpl.sendSms(Collections.singletonList(confirmationRequest.getMessage()), msg);
+				covidWarriorSmsServiceImpl.sendSms(Collections.singletonList(confirmationRequest.getMobile()), msg);
 			}
 			messageResponseRepository.save(messageResponseEntity);
 			return "SUCCESS";
