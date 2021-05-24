@@ -22,4 +22,7 @@ public interface SentMessageMetadataRepository extends JpaRepository<SentMessage
 
 	SentMessageMetadataEntity findByFromAndCityAndCategory(String from, String city, String category);
 
+	@Query(value = "select smm.from as mobile from SentMessageMetadataEntity smm where smm.subscribed = 1 and "
+			+ " smm.city = :city and smm.category = :category")
+	List<String> findOnlyMobileByCityAndCategory(String city, String category);
 }

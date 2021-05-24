@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.covid.warriors.entity.model.MessageResponseEntity;
+import com.covid.warriors.entity.model.SentMessageMetadataEntity;
 import com.covid.warriors.repository.MessageResponseRepository;
+import com.covid.warriors.repository.SentMessageMetadataRepository;
 import com.covid.warriors.service.impl.UrlService;
 
 @Service
@@ -31,6 +33,9 @@ public class MessageResponseService {
 	@Autowired
 	private CovidWarriorsSmsService covidWarriorSmsServiceImpl;
 
+	@Autowired
+	private SentMessageMetadataRepository sentMetadataMessageRepo;
+	
 	public String saveMessageResponse(ConfirmationRequest confirmationRequest) {
 		try {
 			/*String decodedParams = urlService.getOriginalUrl(param);
@@ -48,8 +53,9 @@ public class MessageResponseService {
 				msg = msg.replace("!cat!", messageResponseEntity.getCategory() + "-" + confirmationRequest.getSubCategory())
 						.replace("!mob!", messageResponseEntity.getMobile())
 						.replace("!city!", messageResponseEntity.getCity());
-
-				covidWarriorSmsServiceImpl.sendSms(Collections.singletonList(confirmationRequest.getMobile()), msg);
+				List<String> mobileList = sentMetadataMessageRepo.findOnlyMobileByCityAndCategory(messageResponseEntity.getCity(),
+						messageResponseEntity.getCategory());
+				covidWarriorSmsServiceImpl.sendSms(mobileList, msg);
 			}
 			messageResponseRepository.save(messageResponseEntity);
 			return "SUCCESS";
