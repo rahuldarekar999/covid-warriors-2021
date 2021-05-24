@@ -42,6 +42,15 @@ public class MessageResponseService {
 			messageResponseEntity.setMessage(confirmationRequest.getMessage());
 			messageResponseEntity.setSubCategory(confirmationRequest.getSubCategory());
 			messageResponseEntity.setCreatedAt(LocalDateTime.now());
+			if (StringUtils.isNotBlank(messageResponseEntity.getMessage())
+					&& validAnswers.contains(messageResponseEntity.getMessage().toLowerCase())) {
+				String msg = smsReplyMessage;
+				msg = msg.replace("!cat!", messageResponseEntity.getCategory() + "-" + confirmationRequest.getSubCategory())
+						.replace("!mob!", messageResponseEntity.getMobile())
+						.replace("!city!", messageResponseEntity.getCity());
+
+				covidWarriorSmsServiceImpl.sendSms(Collections.singletonList(confirmationRequest.getMessage()), msg);
+			}
 			messageResponseRepository.save(messageResponseEntity);
 			return "SUCCESS";
 		} catch (Exception e) {
