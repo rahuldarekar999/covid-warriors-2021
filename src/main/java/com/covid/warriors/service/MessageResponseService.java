@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import com.covid.warriors.entity.model.MessageResponseEntity;
 import com.covid.warriors.entity.model.SentMessageMetadataEntity;
@@ -47,6 +48,8 @@ public class MessageResponseService {
 			messageResponseEntity.setMessage(confirmationRequest.getMessage());
 			messageResponseEntity.setSubCategory(confirmationRequest.getSubCategory());
 			messageResponseEntity.setCreatedAt(LocalDateTime.now());
+			System.out.println("Reponse Received from : " + confirmationRequest.getMobile() + 
+					" : response msg : " + confirmationRequest.getMessage());
 			if (StringUtils.isNotBlank(messageResponseEntity.getMessage())
 					&& validAnswers.contains(messageResponseEntity.getMessage().toLowerCase())) {
 				String msg = smsReplyMessage;
@@ -55,7 +58,16 @@ public class MessageResponseService {
 						.replace("!city!", messageResponseEntity.getCity());
 				List<String> mobileList = sentMetadataMessageRepo.findOnlyMobileByCityAndCategory(messageResponseEntity.getCity(),
 						messageResponseEntity.getCategory());
-				covidWarriorSmsServiceImpl.sendSms(mobileList, msg);
+				if(!CollectionUtils.isEmpty(mobileList)) {
+					System.out.println("Sending the notification for city : " + messageResponseEntity.getCity()
+					 + " : category : " + messageResponseEntity.getCategory());
+					System.out.println("Mobile List is : " + mobileList.size());
+					covidWarriorSmsServiceImpl.sendSms(mobileList, msg);
+				} else {
+					System.out.println("no one subscribed for the notification for city : " + messageResponseEntity.getCity()
+					 + " : category : " + messageResponseEntity.getCategory());
+					
+				}
 			}
 			messageResponseRepository.save(messageResponseEntity);
 			return "SUCCESS";

@@ -56,13 +56,14 @@ public class AsyncSmsServiceImpl {
 		account.setDCS(dcs);
 		account.setRoute(route);
 		
-		Message message = new Message();
 		List<Message> listOfMessages = new ArrayList<>();
-		
-		message.setNumber(mobileNumbers);
-		message.setText(msg);
-		
-		listOfMessages.add(message);
+		List<String> mobileNumbersList = Arrays.asList(mobileNumbers.split(","));
+		mobileNumbersList.forEach(mobileNumber ->{
+			Message message = new Message();
+			message.setNumber(mobileNumber);
+			message.setText(msg);
+			listOfMessages.add(message);
+		});
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		Map<String, Object> request = new HashMap<>();
@@ -71,5 +72,6 @@ public class AsyncSmsServiceImpl {
 		
 		HttpEntity<?> entity = new HttpEntity<>(request, headers);
 		String response = restTemplate.exchange(smsApiEndpoint + smsApiSendContext, HttpMethod.POST, entity, String.class).getBody();
+		System.out.println("response is  : " + response);
 	}
 }

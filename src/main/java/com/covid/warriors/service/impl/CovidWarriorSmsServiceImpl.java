@@ -111,7 +111,9 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 			mobileList.forEach(contact -> {
 				if(distinctNumbers.size() == forwardMsgSmsLimit) {
 					try {
-						asyncSmsServiceImpl.sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
+						String mobStr = String.join(",",distinctNumbers);
+						System.out.println("message will be sent to : " + mobStr);
+						asyncSmsServiceImpl.sendBulkSmsGatewayHub(msg, mobStr);
 						//sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
 					} catch (Exception e) {
 						System.out.println("Error while sending messages to  ; " + distinctNumbers);
@@ -130,7 +132,9 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 			
 			if(!CollectionUtils.isEmpty(distinctNumbers)) {
 				try {
-					asyncSmsServiceImpl.sendBulkSmsGatewayHub(msg, String.join(",",distinctNumbers));
+					String mobStr = String.join(",",distinctNumbers);
+					System.out.println("message will be sent to : " + mobStr);
+					asyncSmsServiceImpl.sendBulkSmsGatewayHub(msg, mobStr);
 	//				sendBulkSmsSmsMarketing(msg, String.join("\n",distinctNumbers));
 				} catch (Exception e) {
 					System.out.println("Error while sending messages to  ; " + distinctNumbers);
@@ -253,7 +257,7 @@ public class CovidWarriorSmsServiceImpl implements CovidWarriorsSmsService {
 				//String contantStr = getPhoneNumber(contact);
 				String msg = prepareSmsMessage(city, category, contact, subCat, from);
 				//ContactEntity contactEntity = contactRepo.findByMobileNumberAndCityAndCategory(contact, city, category);
-				System.out.println("message length : " + msg.length());
+				//System.out.println("message length : " + msg.length());
 				/*boolean resend = true;
 				if (contactEntity.getLastMessageSentTime() != null) {
 					Date currDate = new Date();
