@@ -29,7 +29,7 @@ public class DataUploadController {
 
     @RequestMapping(value = "/upload/contact", method = RequestMethod.GET)
     public String uploadContactData(@RequestParam String path) {
-        return covidWarriorService.uploadContactData(path);
+        return covidWarriorService.uploadContactData(pqrs);
     }
 
     @RequestMapping(value = "/vision/text/upload", method = RequestMethod.PUT)
